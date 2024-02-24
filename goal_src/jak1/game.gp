@@ -489,6 +489,11 @@
    "flut_common/flut-part.gc"
    "flut_common/flutflut.gc"
    "flut_common/target-flut.gc"
+
+   ;; TFL note: added
+   "tfl_common/super-eco-crystal.gc"
+   "tfl_common/tfl-hint-data.gc"
+   "tfl_common/tfl-hint.gc"
    )
 
 
@@ -1932,12 +1937,16 @@
 
 (goal-src "engine/common-obs/generic-obs.gc" "pc-anim-util" "assert")
 
+;; TFL note: added
+(goal-src "levels/tfl_common/tfl-music-player.gc" "level")
+
 (goal-src-sequence
  ;; prefix
  "engine/"
 
  :deps
- ("$OUT/obj/generic-obs.o")
+  ;; TFL note: added music player dep
+ ("$OUT/obj/generic-obs.o" "$OUT/obj/tfl-music-player.o")
  "target/target-util.gc"
  "target/target-part.gc"
  "target/collide-reaction-target.gc"

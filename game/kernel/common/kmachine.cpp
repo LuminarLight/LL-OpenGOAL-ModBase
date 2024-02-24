@@ -1,6 +1,10 @@
 #include "kmachine.h"
 
+#include <chrono>
+#include <fstream>
+#include <iostream>
 #include <random>
+#include <thread>
 
 #include "common/global_profiler/GlobalProfiler.h"
 #include "common/log/log.h"
@@ -17,11 +21,14 @@
 #include "game/kernel/common/kernel_types.h"
 #include "game/kernel/common/kprint.h"
 #include "game/kernel/common/kscheme.h"
+#include "game/kernel/jak1/kscheme.h"
 #include "game/mips2c/mips2c_table.h"
 #include "game/sce/libcdvd_ee.h"
 #include "game/sce/libpad.h"
 #include "game/sce/libscf.h"
 #include "game/sce/sif_ee.h"
+#include <SFML/Audio.hpp>
+#include <SFML/Audio/Music.hpp>
 
 /*!
  * Where does OVERLORD load its data from?
@@ -101,6 +108,393 @@ u64 CPadOpen(u64 cpad_info, s32 pad_number) {
     cpad->state = 0;
   }
   return cpad_info;
+}
+
+// Define a vector to store references to the active music instances.
+std::vector<std::pair<sf::Music*, std::string>> activeMusics;
+
+// Index to store the main music in the vector.
+const size_t MAIN_MUSIC_INDEX = 0;
+
+// Function to stop all currently playing sounds.
+void stopAllSounds() {
+  for (auto& pair : activeMusics) {
+    pair.first->stop();
+  }
+  activeMusics.clear();
+}
+
+// Function to get the names of currently playing files.
+std::vector<std::string> getPlayingFileNames() {
+  std::vector<std::string> playingFileNames;
+  for (const auto& pair : activeMusics) {
+    playingFileNames.push_back(pair.second);
+  }
+  return playingFileNames;
+}
+
+std::mutex activeMusicsMutex;  // Mutex to synchronize access to activeMusics
+
+void playMP3(u32 filePathu32, u32 volume) {
+  std::thread thread([=]() {
+    std::string filePath = Ptr<String>(filePathu32).c()->data();
+    std::cout << "Playing MP3: " << filePath << std::endl;
+
+    sf::Music* music = new sf::Music;
+    if (!music->openFromFile(filePath)) {
+      std::cout << "Failed to load: " << filePath << std::endl;
+      delete music;
+      return;
+    }
+    music->setVolume(volume);
+    music->play();
+
+    {
+      std::lock_guard<std::mutex> lock(activeMusicsMutex);
+      activeMusics.push_back(std::make_pair(music, filePath));
+    }
+
+    while (music->getStatus() == sf::Music::Playing) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(activeMusicsMutex);
+      activeMusics.erase(std::remove_if(activeMusics.begin(), activeMusics.end(),
+                                        [music](const auto& pair) { return pair.first == music; }),
+                         activeMusics.end());
+    }
+
+    delete music;
+  });
+
+  thread.detach();
+}
+
+// TFL note: added
+std::vector<std::pair<sf::Music*, std::string>> g_tfl_hints;
+std::mutex g_tfl_hints_mtx;
+bool g_interrupt_hint = false;
+
+void stop_tfl_hint() {
+  for (auto& pair : g_tfl_hints) {
+    pair.first->stop();
+  }
+  // jak1::intern_from_c("*tfl-hint-playing?*")->value = offset_of_s7();
+  g_tfl_hints.clear();
+}
+
+std::vector<std::string> tfl_get_current_hint() {
+  std::vector<std::string> playing;
+  for (const auto& pair : g_tfl_hints) {
+    playing.push_back(pair.second);
+  }
+  return playing;
+}
+
+u32 play_tfl_hint(u32 file_name, u32 volume, u32 interrupt) {
+  auto hint_is_playing = jak1::intern_from_c("*tfl-hint-playing?*")->value ==
+                         offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+  if (hint_is_playing && interrupt == offset_of_s7()) {
+    printf("TFL hint is already playing!\n");
+    return offset_of_s7();
+  }
+
+  if (hint_is_playing && interrupt == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
+    // auto current_hint = tfl_get_current_hint();
+    printf("Interrupting TFL hint\n");
+    stop_tfl_hint();
+  }
+
+  std::thread hint_thread([=]() {
+    auto name_str = std::string(Ptr<String>(file_name)->data());
+    auto path = (file_util::get_jak_project_dir() / "custom_levels" / "custom_sound" / "jak1" /
+                 "hints" / name_str)
+                    .string();
+    printf("Playing hint: %s\n", name_str.c_str());
+
+    auto* hint = new sf::Music;
+    if (!hint->openFromFile(std::filesystem::path(path))) {
+      printf("Failed to load: %s\n", path.c_str());
+      jak1::intern_from_c("*tfl-hint-playing?*")->value = offset_of_s7();
+      delete hint;
+      return;
+    }
+    float vol;
+    memcpy(&vol, &volume, 4);
+    hint->setVolume(vol);
+    hint->play();
+    jak1::intern_from_c("*tfl-hint-playing?*")->value = offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+
+    {
+      std::lock_guard<std::mutex> lock(g_tfl_hints_mtx);
+      g_tfl_hints.emplace_back(hint, path.c_str());
+    }
+
+    auto paused_func = [](sf::Music* hint) {
+      while (hint->getStatus() == sf::Music::Paused) {
+        if (MasterExit != RuntimeExitStatus::RUNNING) {
+          stop_tfl_hint();
+          return;
+        }
+        auto pause = jak1::call_goal_function_by_name("paused?");
+        if (pause == offset_of_s7()) {
+          hint->play();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    };
+
+    auto play_func = [&hint, &paused_func]() {
+      while (hint->getStatus() == sf::Music::Playing) {
+        auto paused = jak1::call_goal_function_by_name("paused?");
+        if (paused == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
+          hint->pause();
+          paused_func(hint);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    };
+
+    play_func();
+
+    {
+      std::lock_guard<std::mutex> lock(g_tfl_hints_mtx);
+      g_tfl_hints.erase(std::remove_if(g_tfl_hints.begin(), g_tfl_hints.end(),
+                                       [hint](const auto& pair) { return pair.first == hint; }),
+                        g_tfl_hints.end());
+    }
+
+    jak1::intern_from_c("*tfl-hint-playing?*")->value = offset_of_s7();
+    delete hint;
+  });
+
+  hint_thread.detach();
+  return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+}
+
+sf::Music* g_tfl_music;
+
+void stop_tfl_music(bool force) {
+  if (g_tfl_music) {
+    if (force) {
+      g_tfl_music->stop();
+      jak1::intern_from_c("*tfl-music-playing?*")->value = offset_of_s7();
+      return;
+    }
+    auto lerp = [](float a, float b, float t) { return a + t * (b - a); };
+    float time_elapsed = 1.f;
+    float start = g_tfl_music->getVolume();
+    float end = 0.f;
+    float val = start;
+    while (val >= 0.01f) {
+      val = lerp(start, end, 1.0f - time_elapsed);
+      g_tfl_music->setVolume(val);
+      // printf("Fading out music volume: %f\n", val);
+      time_elapsed -= 0.01f;
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    g_tfl_music->stop();
+    jak1::intern_from_c("*tfl-music-playing?*")->value = offset_of_s7();
+    // delete g_tfl_music;
+  }
+}
+
+u32 play_tfl_music(u32 file_name, u32 volume) {
+  auto music_is_playing = jak1::intern_from_c("*tfl-music-playing?*")->value ==
+                          offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+  if (music_is_playing) {
+    printf("TFL music is already playing!\n");
+    return offset_of_s7();
+  }
+
+  std::thread music_thread([=]() {
+    auto name_str = std::string(Ptr<String>(file_name)->data());
+    std::string file;
+    auto music_dir =
+        file_util::get_jak_project_dir() / "custom_levels" / "custom_sound" / "jak1" / "music";
+    for (const auto& entry : fs::directory_iterator(music_dir)) {
+      // printf("Checking file %s\n",entry.path().string().c_str());
+      if (entry.is_regular_file() && entry.path().stem().string() == name_str) {
+        file = entry.path().string();
+        break;
+      }
+    }
+
+    auto* music = new sf::Music;
+    if (!music->openFromFile(std::filesystem::path(file))) {
+      printf("Failed to load music: %s\n", file.c_str());
+      delete music;
+      return;
+    }
+    float vol;
+    memcpy(&vol, &volume, 4);
+    printf("Playing music: %s (volume %f)\n", name_str.c_str(), vol);
+    music->setVolume(0.f);
+    music->setLoop(true);
+    music->play();
+    jak1::intern_from_c("*tfl-music-playing?*")->value =
+        offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+    g_tfl_music = music;
+    auto lerp = [](float a, float b, float t) { return a + t * (b - a); };
+    float time_elapsed = 0.f;
+    float start = 0.f;
+    float end = vol;
+    float val = start;
+    while (val < vol) {
+      val = lerp(start, end, time_elapsed);
+      g_tfl_music->setVolume(val);
+      // printf("Fading in music volume: %f (target volume: %f)\n", val, vol);
+      time_elapsed += 0.01f;
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    auto paused_func = [](sf::Music* music) {
+      while (music->getStatus() == sf::Music::Paused) {
+        auto pause = jak1::call_goal_function_by_name("paused?");
+        if (pause == offset_of_s7()) {
+          music->play();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    };
+
+    auto play_func = [&music, &paused_func]() {
+      while (music->getStatus() == sf::Music::Playing) {
+        if (MasterExit != RuntimeExitStatus::RUNNING) {
+          stop_tfl_music(true);
+          return;
+        }
+        auto stop = jak1::intern_from_c("*tfl-music-stop*")->value;
+        if (stop == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
+          jak1::intern_from_c("*tfl-music-stop*")->value = offset_of_s7();
+          stop_tfl_music(false);
+          // delete g_tfl_music;
+          // std::terminate();
+        }
+        float vol;
+        auto volume = jak1::call_goal_function_by_name("tfl-music-player-volume");
+        memcpy(&vol, &volume, 4);
+        music->setVolume(vol);
+        auto paused = jak1::call_goal_function_by_name("paused?");
+        if (paused == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
+          music->pause();
+          paused_func(music);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    };
+
+    play_func();
+  });
+
+  music_thread.detach();
+  return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+}
+
+// Declare a mutex for synchronizing access to mainMusicInstance
+std::mutex mainMusicMutex;
+
+// Define a structure to hold music data
+struct MusicData {
+  sf::Music* music;
+  std::string filePath;
+  u32 volume;
+  bool isPaused;  // Added flag to track pause/resume state
+};
+
+// Define a vector to hold the music instances
+std::vector<MusicData> musicInstances;
+std::string mainMusicFilePath;  // Global variable to store the main music file path
+
+// Function to stop the Main Music.
+void stopMainMusic() {
+  std::cout << "Trying to stop Main Music: " << mainMusicFilePath << std::endl;
+  auto it = musicInstances.begin();
+  while (it != musicInstances.end()) {
+    std::cout << "Looking for Main Music: " << mainMusicFilePath << std::endl;
+    if (it->filePath == mainMusicFilePath) {
+      std::cout << "FOUND!!! Main Music: " << mainMusicFilePath << std::endl;
+      it->music->stop();
+      delete it->music;
+      it = musicInstances.erase(it);  // 'erase' will automatically move to the next element
+    } else {
+      ++it;
+    }
+  }
+}
+
+// Function to play the Main Music.
+void playMainMusic(u32 filePathu32, u32 volume) {
+  std::string filePath = Ptr<String>(filePathu32).c()->data();
+  std::cout << "Playing Main Music: " << filePath << std::endl;
+  mainMusicFilePath = filePath;
+  // stopMainMusic();
+  //  Stop and clean up any existing music instances for this file path
+  for (auto it = musicInstances.begin(); it != musicInstances.end();) {
+    if (it->filePath == filePath) {
+      it->music->stop();
+      delete it->music;
+      it = musicInstances.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  // Create a new instance of sf::Music for the new Main Music.
+  sf::Music* mainMusic = new sf::Music;
+  if (!mainMusic->openFromFile(filePath)) {
+    std::cout << "Failed to load: " << filePath << std::endl;
+    delete mainMusic;
+    return;
+  }
+  mainMusic->setVolume(volume);
+  // Set looping to true to make the track loop
+  mainMusic->setLoop(true);
+
+  mainMusic->play();
+
+  // Store the Main Music instance in the vector.
+  MusicData musicData = {mainMusic, filePath, volume, false};  // Initialize isPaused to false
+  musicInstances.push_back(musicData);
+}
+
+void pauseMainMusic() {
+  mainMusicMutex.lock();
+  for (auto& musicData : musicInstances) {
+    if (musicData.music && !musicData.isPaused) {
+      if (musicData.music->getStatus() == sf::SoundSource::Playing) {
+        musicData.music->pause();
+        musicData.isPaused = true;
+      }
+    }
+  }
+  mainMusicMutex.unlock();
+}
+
+void resumeMainMusic() {
+  mainMusicMutex.lock();
+  for (auto& musicData : musicInstances) {
+    if (musicData.music && musicData.isPaused) {
+      if (musicData.music->getStatus() == sf::SoundSource::Paused) {
+        musicData.music->play();
+        musicData.isPaused = false;
+      }
+    }
+  }
+  mainMusicMutex.unlock();
+}
+
+// Function to change the volume of the Main Music.
+void changeMainMusicVolume(u32 volume) {
+  mainMusicMutex.lock();
+  for (auto& musicData : musicInstances) {
+    if (musicData.music) {
+      musicData.music->setVolume(volume);
+      musicData.volume = volume;
+    }
+  }
+  mainMusicMutex.unlock();
 }
 
 /*!
@@ -968,6 +1362,24 @@ void init_common_pc_port_functions(
   // file related functions
   make_func_symbol_func("pc-filepath-exists?", (void*)pc_filepath_exists);
   make_func_symbol_func("pc-mkdir-file-path", (void*)pc_mkdir_filepath);
+
+  // Play sound file
+  make_func_symbol_func("play-sound-file", (void*)playMP3);
+
+  // Stop sound file
+  make_func_symbol_func("stop-sound-file", (void*)stopAllSounds);
+
+  // Main music stuff
+  make_func_symbol_func("play-main-music", (void*)playMainMusic);
+  make_func_symbol_func("pause-main-music", (void*)pauseMainMusic);
+  make_func_symbol_func("stop-main-music", (void*)stopMainMusic);
+  make_func_symbol_func("resume-main-music", (void*)resumeMainMusic);
+
+  make_func_symbol_func("main-music-volume", (void*)changeMainMusicVolume);
+
+  // TFL note: added
+  make_func_symbol_func("play-tfl-hint", (void*)play_tfl_hint);
+  make_func_symbol_func("play-tfl-music", (void*)play_tfl_music);
 
   // discord rich presence
   make_func_symbol_func("pc-discord-rpc-set", (void*)set_discord_rpc);

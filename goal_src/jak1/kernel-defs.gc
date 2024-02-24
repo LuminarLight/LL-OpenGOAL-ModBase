@@ -383,6 +383,21 @@
 (define-extern pc-set-collision-mode (function pc-collision-mode none))
 (define-extern pc-discord-rpc-update (function discord-info none))
 (define-extern pc-discord-rpc-set (function int none))
+;;main music start
+(define-extern play-main-music (function string int none))
+(define-extern pause-main-music (function none))
+(define-extern stop-main-music (function none))
+(define-extern resume-main-music (function none))
+(define-extern main-music-volume (function int none))
+;;main music end
+
+;; TFL note: added
+(define-extern play-tfl-hint (function string float symbol symbol))
+(define-extern play-tfl-music (function string float symbol))
+
+(define-extern play-sound-file (function string int none))
+(define-extern stop-sound-file (function none))
+
 (define-extern pc-filepath-exists? (function string symbol))
 (define-extern pc-mkdir-file-path (function string none))
 (define-extern pc-sound-set-flava-hack (function int none))
