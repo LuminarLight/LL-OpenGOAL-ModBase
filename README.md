@@ -1,3 +1,13 @@
+How to update so I don't forget:
+
+```
+git remote add vanilla <jak-project git url here>
+git fetch vanilla
+git merge vanilla/master --allow-unrelated-histories --no-commit
+```
+
+---
+
 <p align="center">
   <img width="500" height="100%" src="./docs/img/logo-text-colored-new.png">
 </p>
