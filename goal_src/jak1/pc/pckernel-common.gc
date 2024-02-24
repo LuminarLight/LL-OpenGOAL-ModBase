@@ -275,6 +275,9 @@
   ;; update auto-splitter info
   (update-speedrun obj)
 
+  ;; Hack to make all our actors visible from afar. Will be removed once a better solution is found.
+  (set! (-> *pc-settings* ps2-actor-vis?) #f)
+
   (when (not (-> obj use-vis?))
     (update-video-hacks obj)
     )
