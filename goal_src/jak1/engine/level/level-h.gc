@@ -119,6 +119,8 @@
    (prev-level         basic)
    (next-level         basic)
    (wait-for-load      symbol)
+   (custom-level?      symbol)
+   (custom-music       symbol)
    )
   )
 

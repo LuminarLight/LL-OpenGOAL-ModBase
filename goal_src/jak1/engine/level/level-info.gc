@@ -2009,6 +2009,7 @@
                            :bottom-height (meters -20)
                            :run-packages '()
                            :wait-for-load #t
+                           :custom-level? #t
                            )
         )
 
@@ -2050,6 +2051,8 @@
                            :bottom-height (meters 530)
                            :run-packages '()
                            :wait-for-load #t
+                           :custom-level? #t
+                           :custom-music 'lltest
                            )
         )
 
