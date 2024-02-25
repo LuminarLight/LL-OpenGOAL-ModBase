@@ -1974,7 +1974,7 @@
 
 ;;;;;;;;; CUSTOM LEVELS
 (define test-zone (new 'static 'level-load-info
-                           :index 26
+                           :index 27 ;; Changed to make it not "conflict" with index of default-level
                            :name 'test-zone
                            :visname 'test-zone-vis ;; name + -vis
                            :nickname 'tsz          ;; nickname
