@@ -288,7 +288,7 @@
    (scale         vector  :inline :offset 32)
    )
   |#
-  
+
   (format #t "~T)~%")
   (format #t "~T:route (new 'static 'inline-array vector4ub ~d~%" (* (-> obj poly-count) 2))
   (let ((i 0))

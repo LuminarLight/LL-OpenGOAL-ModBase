@@ -1289,7 +1289,7 @@
           )
           ;; Optional? If I remove the node, the enemy sometimes stops as soon as I leave the navmesh (or maybe not, idk). I don't understand this. Commenting it out, but leaving here because it may be useful for something.
           ;; Also I probably have redundancy among the properties (for example not sure if radius-x is needed if we have radius, and vice-versa).
-          #|:nodes (new 'static 'inline-array nav-node 1 
+          #|:nodes (new 'static 'inline-array nav-node 1
                   (new 'static 'nav-node :center-x (meters 0.4020) :center-y (meters -0.2929) :center-z (meters -0.0592)
                   :type 1
                   :parent-offset 0
@@ -1412,7 +1412,7 @@
           )
           :node-count 3
           :nodes (new 'static 'inline-array nav-node 3
-                  (new 'static 'nav-node :center-x (meters 0.0902) :center-y (meters 0.8114) :center-z (meters -1.3648) :type 0 :parent-offset 0      
+                  (new 'static 'nav-node :center-x (meters 0.0902) :center-y (meters 0.8114) :center-z (meters -1.3648) :type 0 :parent-offset 0
                   :center (new 'static 'vector :x (meters 0.0902) :y (meters 0.8114) :z (meters -1.3648) :w 0.0000)
                   :radius-x (meters 13.8815) :radius-y (meters 1.4238) :radius-z (meters 1.9530)
                   :left-offset 48 :right-offset 96 :num-tris 6291504
@@ -1420,7 +1420,7 @@
                   :first-tris (new 'static 'array uint8 4 #x85 #xcc #x33 #x45) :scale-z (meters 0.5120)
                   :last-tris (new 'static 'array uint8 4 #x0 #x0 #x0 #x0)
                   :scale (new 'static 'vector :x (meters 0.0720) :y 2876.7824 :z (meters 0.5120) :w 0.0000))
-                  (new 'static 'nav-node :center-x (meters -7.9538) :center-y (meters 0.7856) :center-z (meters -1.4826) :type 1 :parent-offset 0     
+                  (new 'static 'nav-node :center-x (meters -7.9538) :center-y (meters 0.7856) :center-z (meters -1.4826) :type 1 :parent-offset 0
                   :center (new 'static 'vector :x (meters -7.9538) :y (meters 0.7856) :z (meters -1.4826) :w 0.0000)
                   :radius-x (meters 5.8375) :radius-y (meters 1.3979) :radius-z (meters 1.7773)
                   :left-offset 4 :right-offset 0 :num-tris 4
@@ -1428,7 +1428,7 @@
                   :first-tris (new 'static 'array uint8 4 #x4 #x5 #x8 #x9) :scale-z (meters 0.5626)
                   :last-tris (new 'static 'array uint8 4 #x0 #x0 #x0 #x0)
                   :scale (new 'static 'vector :x (meters 0.1713) :y 0.0000 :z (meters 0.5626) :w 0.0000))
-                  (new 'static 'nav-node :center-x (meters 5.9059) :center-y (meters 0.9930) :center-z (meters -1.3648) :type 1 :parent-offset 0      
+                  (new 'static 'nav-node :center-x (meters 5.9059) :center-y (meters 0.9930) :center-z (meters -1.3648) :type 1 :parent-offset 0
                   :center (new 'static 'vector :x (meters 5.9059) :y (meters 0.9930) :z (meters -1.3648) :w 0.0000)
                   :radius-x (meters 8.0657) :radius-y (meters 1.2422) :radius-z (meters 1.9530)
                   :left-offset 6 :right-offset 0 :num-tris 6

@@ -171,7 +171,7 @@
     The cause can be 'dead if you die, or 'game to reset everything.
     If save-to-load is not #f will load data from that.
     If continue-point-override is not #f, will use that."
-  
+
   ;; Custom game counts here. Example:
   ;; (set! (-> *game-counts* data 16 money-count) 150)
   ;; (set! (-> *game-counts* data 16 buzzer-count) 7)

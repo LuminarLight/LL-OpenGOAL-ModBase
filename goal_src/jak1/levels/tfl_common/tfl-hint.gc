@@ -214,7 +214,7 @@
 
 (defmethod can-play? ((this tfl-hint))
   (let ((seen? (seen-text? *game-info* (-> this hint-data text-id))) (hint (get-tfl-hint)))
-         ;; we are not playing a hint ourselves and there is either no other hint or the current hint can be interrupted 
+         ;; we are not playing a hint ourselves and there is either no other hint or the current hint can be interrupted
     (and (and (not (= hint this)) (or (not hint) (-> hint hint-data interrupt?)))
          ;; if we have a task associated, check our task-status and only play then, if task-status is invalid, just play if task is open
          (if (> (-> this hint-data task) (game-task none))
