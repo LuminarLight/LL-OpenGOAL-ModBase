@@ -267,3 +267,13 @@ endif()
 
 add_executable(gk main.cpp)
 target_link_libraries(gk runtime)
+
+# Copy the SFML dll files because it is weird.
+
+if(EXISTS "${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-audio-3.dll")
+    file(COPY_FILE ${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-audio-3.dll ${CMAKE_BINARY_DIR}/bin/sfml-audio-3.dll)
+endif()
+
+if(EXISTS "${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-system-3.dll")
+    file(COPY_FILE ${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-system-3.dll ${CMAKE_BINARY_DIR}/bin/sfml-system-3.dll)
+endif()
