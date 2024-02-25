@@ -1175,9 +1175,19 @@
            )
        )
       ((= s5-0 'music)
-       (if *display-ambient-music-marks*
-           (set! s3-0 #t)
-           )
+        (when *display-ambient-music-marks*
+          (let ((music-lump (res-lump-struct this 'music symbol))
+                (flava-lump (res-lump-value this 'flava uint128)))
+            (let ((s3-2 add-debug-text-3d)
+                  (s2-1 #t)
+                  (s1-1 68)
+                  )
+              (format (clear *temp-string*) "music: ~A~%flava: ~D (~s)" music-lump flava-lump (enum->string music-flava flava-lump))
+              (s3-2 s2-1 (the-as bucket-id s1-1) *temp-string* gp-0 (font-color white) (new 'static 'vector2h :y 24))
+              )
+            )
+          (set! s3-0 #t)
+         )
        )
       )
     (when s3-0
