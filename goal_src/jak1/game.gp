@@ -1647,6 +1647,13 @@
 ;; the DGO file
 (custom-level-cgo "TSZ.DGO" "test-zone/testzone.gd")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Our Custom Levels
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(build-custom-level "lltest2")
+(custom-level-cgo "LT2.DGO" "lltest2/lltest2.gd")
+
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Game Engine Code
 ;;;;;;;;;;;;;;;;;;;;;

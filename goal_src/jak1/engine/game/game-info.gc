@@ -222,7 +222,7 @@
                            "demo-start"
                            )
                           (*debug-segment*
-                            "village1-hut"
+                            "lltest2-start";"village1-hut"
                             )
                           (else
                             "title-start"

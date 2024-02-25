@@ -2013,3 +2013,44 @@
         )
 
 (cons! *level-load-list* 'test-zone)
+
+(define lltest2 (new 'static 'level-load-info
+                           :index 28
+                           :name 'lltest2
+                           :visname 'lltest2-vis
+                           :nickname 'lt2
+                           :packages '()
+                           :sound-banks '()
+                           :music-bank #f
+                           :ambient-sounds '()
+                           :mood '*default-mood*
+                           :mood-func 'update-mood-default
+                           :ocean #f
+                           :sky #t
+                           :continues '((new 'static 'continue-point
+                                             :name "lltest2-start"
+                                             :level 'test-zone
+                                             :trans (new 'static 'vector :x (meters 0.) :y (meters 600.) :z (meters 0.) :w 1.0)
+                                             :quat (new 'static 'quaternion  :w 1.0)
+                                             :camera-trans (new 'static 'vector :x 0.0 :y 4096.0 :z 0.0 :w 1.0)
+                                             :camera-rot (new 'static 'array float 9 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0)
+                                             :load-commands '()
+                                             :vis-nick 'lt2
+                                             :lev0 'lltest2
+                                             :disp0 'display
+                                             :lev1 #f
+                                             :disp1 #f
+                                             ))
+                           :tasks '()
+                           :priority 100
+                           :load-commands '()
+                           :alt-load-commands '()
+                           :bsp-mask #xffffffffffffffff
+                           :bsphere (new 'static 'sphere :w 167772160000.0)
+                           :bottom-height (meters 530)
+                           :run-packages '()
+                           :wait-for-load #t
+                           )
+        )
+
+(cons! *level-load-list* 'lltest2)

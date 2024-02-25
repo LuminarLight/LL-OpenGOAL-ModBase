@@ -1515,8 +1515,8 @@
   (let ((startup-level (case *kernel-boot-message*
                         (('play)
                      (if *debug-segment*
-                       'village1
-                       'title
+                       'lltest2
+                       #f
                        )
                          )
                      (else

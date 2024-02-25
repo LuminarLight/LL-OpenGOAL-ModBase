@@ -1,0 +1,338 @@
+{
+  // The "in-game" name of the level. Should be lower case, with dashes (GOAL symbol name)
+  // the name of this file, and the folder this file is in must have the same name.
+  "long_name": "lltest2",
+  // The file name, should be upper case and 8 characters or less.
+  "iso_name": "LLTEST2",
+  // The nickname, should be exactly 3 characters
+  "nickname": "lt2", // 3 char name, all lowercase
+  // Background mesh file.
+  // Must have vertex colors. Use the blender cycles renderer, bake, diffuse, uncheck color,
+  // and bake to vertex colors. For now, only the first vertex color group is used, so make sure you
+  // only have 1.
+  "gltf_file": "custom_levels/jak1/lltest2/lltest2.glb",
+
+  // automatically set wall vs. ground based on angle. Useful if you don't want to assign this yourself
+  "automatic_wall_detection": true,
+  "automatic_wall_angle": 45.0,
+
+  // if your mesh has triangles with incorrect orientation, set this to make all collision mesh triangles double sided
+  // this makes collision 2x slower and bigger, so only use if really needed
+  "double_sided_collide": false,
+
+  // available res-lump tag data types:
+  // int32, float, meters, vector, vector4m (meters)
+  //
+  // examples:
+  //
+  // adds a float tag 'spring-height' with value of 200 meters (1 meter = 4096.0 units):
+  // "spring-height": ["meters", 200.0]
+  //
+  // adds a vector tag 'movie-pos':
+  // "movie-pos": ["vector", [4096000.0, -176128.0, 1353973.76, 1.0]]
+
+  // The base actor id for your custom level. If you have multiple levels this should be unique!
+  "base_id": 40000,
+
+  // All art groups you want to use in your custom level. Will add their models and corresponding textures to the FR3 file.
+  // Note: You will still have to add them to your level's .gd file.
+  "art_groups": ["plat-ag", "water-anim-training-ag", "water-anim-sunken-dark-eco-ag", "driller-lurker-ag", "mother-spider-ag", "baby-spider-ag", "spider-egg-ag", "babak-ag", "quicksandlurker-ag", "hopper-ag", "lurkerpuppy-ag"],
+
+  // Ambients you want to use in your custom level. Ambients can be used for various things like changing the music variation (flava),
+  // adding ambient sounds, level name hints, etc.
+  "ambients": [
+    {
+      "trans": [0.0, 602.0, -110.0, 10.0],
+      "bsphere": [0.0, 602.0, -110.0, 15.0],
+      "lump": {
+        "name": "lltest2-ambient-1",
+        "type": "'music",
+        "flava": "'danger"
+      }
+    }
+  ],
+
+  "actors" : [
+    {
+      "aid": 40000,
+      "trans": [41.85, 600.00, -49.52],
+      "etype": "babak",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [41.85, 600.00, -49.52, 10],
+      "lump": {
+        "name": "lltest2-babak-1",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "path": ["vector3m",
+            [33.82, 600.00, -58.68],
+            [44.60, 600.00, -50.75],
+            [50.63, 600.00, -40.16],
+            [40.28, 600.00, -47.92],
+            [33.82, 600.00, -58.68]
+          ],
+        "nav-mesh-sphere": ["vector4m",
+            [31.56, 600.00, -40.46, 2.0]
+          ]
+      }
+    },
+    {
+      "trans": [41.56, 600.00, -36.46],
+      "etype": "babak",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [41.56, 600.00, -36.46, 10],
+      "lump": {
+        "name": "lltest2-babak-2",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "nav-mesh-actor": ["uint32", 40000],
+        "path-actor": ["uint32", 40000]
+      }
+    },
+    {
+      "trans": [26.24, 600.00, -49.35],
+      "etype": "babak",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [26.24, 600.00, -49.35, 10],
+      "lump": {
+        "name": "lltest2-babak-3",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "nav-mesh-actor": ["uint32", 40000],
+        "path-actor": ["uint32", 40000]
+      }
+    },
+
+    {
+      "aid": 40050,
+      "trans": [-37.67, 600.00, -39.65],
+      "etype": "lurkerpuppy",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [-37.67, 600.00, -39.65, 10],
+      "lump": {
+        "name": "lltest2-lurkerpuppy-1",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "path": ["vector3m",
+            [-49.43, 600.00, -41.00],
+            [-37.38, 601.69, -41.01],
+            [-26.06, 600.00, -41.12]
+          ]
+      }
+    },
+
+    {
+      "trans": [0.0, 600.0, 100.0], // translation
+      "etype": "slide-control",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [0.0, 600.0, 100.0, 10],
+      "lump": {
+        "name": "lltest2-slide-control-1",
+        "path": ["vector4m",
+            //[0.04, 595.22, 95.05, 1.0],
+            //[-0.94, 600.00, 88.32, 1.0],
+            [-0.96, 608.66, 74.00, 1.0],
+            [0.10, 587.59, 127.60, 1.0],
+            [0.14, 578.43, 168.38, 1.0],
+            [-0.04, 557.08, 257.25, 1.0]
+          ],
+        "vis-dist": ["meters", 200.0]
+      }
+    },
+
+    {
+      "trans": [35.02, 600.00, 84.85],
+      "etype": "driller-lurker",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [35.02, 600.00, 84.85, 10],
+      "lump": {
+        "name": "lltest2-driller-lurker-1",
+        "vis-dist": ["meters", 200.0],
+        "path": ["vector4m",
+            [35.02, 600.00, 84.85, 1.0],
+            [62.84, 600.00, 85.34, 1.0],
+            [92.15, 600.00, 86.19, 1.0],
+            [93.23, 600.00, 46.45, 1.0]
+          ]
+      }
+    },
+
+    {
+      "trans": [25.02, 600.00, 64.85],
+      "etype": "mother-spider",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [25.02, 600.00, 64.85, 10],
+      "lump": {
+        "name": "lltest2-mother-spider-1",
+        "vis-dist": ["meters", 200.0],
+        "path": ["vector4m",
+            [25.02, 600.00, 64.85, 1.0],
+            [52.84, 600.00, 65.34, 1.0],
+            [82.15, 600.00, 66.19, 1.0],
+            [83.23, 600.00, 26.45, 1.0]
+          ]
+      }
+    },
+
+    {
+      "trans": [-84.11, 557.1, 254.7],
+      "etype": "eco-blue",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [-84.11, 557.1, 254.7, 10],
+      "lump": {
+        "name": "lltest2-eco-blue-1",
+        "vis-dist": ["meters", 200.0]
+      }
+    },
+    {
+      "trans": [-80.11, 557.1, 254.7],
+      "etype": "launcher",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [-80.11, 557.1, 254.7, 10],
+      "lump": {
+        "name": "lltest2-launcher-1",
+        "mode": "'#x1", // what does this do?
+        "spring-height": ["meters", 400.0],
+        "vis-dist": ["meters", 200.0],
+        "alt-vector": ["vector4m", [-80.11, 600.0, 80.0, 0.003]] // last one needs to be multiplied by 4096 - for how many seconds should this be "forced"
+      }
+    },
+
+    { // Shoutout to Hat Kid for the water stuff.
+      "trans": [0.0, 602.0, -110.0], // translation
+      "etype": "water-anim",  // actor type                               // TEST ACTOR //
+      "game_task": 0, // associated game task (for powercells, etc)
+      "quat" : [0, 0, 0, 1], // quaternion 
+      "bsphere": [0.0, 602.0, -110.0, 200.0], // bounding sphere
+      "lump": {
+          "vol": ["vector-vol",
+            [1.0, 0.0, 0.0, -80.0],   // +x (+x in blender)
+            [-1.0, 0.0, 0.0, 111.0],     // -x (inverted x in blender because of the -1)
+            [0.0, 1.0, 0.0, 602.0],      // +y (+z in blender)
+            [0.0, -1.0, 0.0, -587.0], // -y (inverted z in blender because of the -1)
+            [0.0, 0.0, 1.0, 16.0],       // +z (-y in blender)
+            [0.0, 0.0, -1.0, 8.0]       // -z (+y in blender)
+          ],
+        "name": "lltest2-water-anim-1",
+        //"water-height": ["float",  364640.0, 2048.0, 8192.0, 1048588.0 ], // camera height, ?, wadledept, flags
+        "water-height": ["float",  2475792.0, 2048.0, 8192.0, 1048588.0 ], // camera height, ?, wadledept, flags
+        //"look": ["int32", 36],
+        "look": ["int32", 40],
+        "vis-dist": ["meters", 200.0]
+      }
+    },
+
+    {
+      "trans": [58.0, 605.71, 12.42],
+      "etype": "plat",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [58.0, 605.71, 12.42, 10],
+      "lump": {
+        "name": "lltest2-plat-1",
+        "vis-dist": ["meters", 200.0],
+        "path": ["vector4m",
+            [58.0, 605.71, 12.42, 1.0], // fourth value seems to have no effect
+            [65.0, 605.71, 12.128, 1.0],
+            [70.0, 605.71, 6.24, 1.0],
+            [67.0, 605.71, 0.42, 1.0]
+          ],
+        "path-k": ["float", // Controls the curve for the paths - optional. Float array. Two floats for each node. No idea how it works.
+        0.0, 0.0, 
+        0.0, 0.0, 
+        1.0, 1.0,
+        1.0, 1.0],
+        "sync": ["float", 10.0, 0.0] // higher makes it slower - not sure of exact units | 0.5 and 0.0 are commonly used, maybe it is some kind of offset?
+      }
+    },
+    {
+      "trans": [48.0, 610.71, 12.42],
+      "etype": "plat",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [48.0, 610.71, 12.42, 10],
+      "lump": {
+        "name": "lltest2-plat-2",
+        "vis-dist": ["meters", 200.0],
+        "path": ["vector4m",
+            [48.0, 610.71, 12.42, 1.0],
+            [55.0, 610.71, 12.128, 1.0],
+            [60.0, 610.71, 6.24, 1.0],
+            [57.0, 610.71, 0.42, 1.0]
+          ],
+        "path-k": ["float",
+        0.0, 0.0, 
+        0.0, 0.0, 
+        1.0, 1.0,
+        1.0, 1.0],
+        "sync": ["float", 10.0, 0.0]
+      }
+    },
+    {
+      "trans": [38.0, 615.71, 12.42],
+      "etype": "plat",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [38.0, 615.71, 12.42, 10],
+      "lump": {
+        "name": "lltest2-plat-3",
+        "vis-dist": ["meters", 200.0],
+        "path": ["vector4m",
+            [38.0, 615.71, 12.42, 1.0],
+            [45.0, 615.71, 12.128, 1.0],
+            [50.0, 615.71, 6.24, 1.0],
+            [47.0, 615.71, 0.42, 1.0]
+          ],
+        "path-k": ["float",
+        0.0, 0.0, 
+        0.0, 0.0, 
+        1.0, 1.0,
+        1.0, 1.0],
+        "sync": ["float", 10.0, 0.0]
+      }
+    },
+    {
+      "trans": [28.0, 620.71, 12.42],
+      "etype": "plat",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [28.0, 620.71, 12.42, 10],
+      "lump": {
+        "name": "lltest2-plat-4",
+        "vis-dist": ["meters", 200.0],
+        "path": ["vector4m",
+            [28.0, 620.71, 12.42, 1.0],
+            [35.0, 620.71, 12.128, 1.0],
+            [40.0, 620.71, 6.24, 1.0],
+            [37.0, 620.71, 0.42, 1.0]
+          ],
+        "path-k": ["float",
+        0.0, 0.0, 
+        0.0, 0.0, 
+        1.0, 1.0,
+        1.0, 1.0],
+        "sync": ["float", 10.0, 0.0]
+      }
+    }
+  ]
+}

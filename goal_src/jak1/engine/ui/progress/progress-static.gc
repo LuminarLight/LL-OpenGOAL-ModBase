@@ -179,7 +179,7 @@
 ;; maps level-info indices to the appropriate offset in *level-task-data*
 (define *level-task-data-remap*
    (new 'static 'boxed-array :type int32
-    (level-task-data-index training)
+    (level-task-data-index training) ;; 1
     (level-task-data-index village1)
     (level-task-data-index beach)
     (level-task-data-index jungle) ;; jungle?
@@ -198,10 +198,15 @@
     (level-task-data-index cave) ;; robocave?
     (level-task-data-index cave) ;; darkcave?
     (level-task-data-index lavatube)
-    (level-task-data-index citadel) ;; citadel?
+    (level-task-data-index citadel) ;; citadel? 20
     (level-task-data-index citadel) ;; finalboss?
-    (level-task-data-index misty) ;; demo?
-    (level-task-data-index misty) ;; intro?
+    (level-task-data-index misty) ;; intro 22
+    (level-task-data-index misty) ;; demo 23
+    (level-task-data-index village1) ;; title 24
+    (level-task-data-index training) ;; halfpipe 25
+    (level-task-data-index training) ;; default-level 26
+    (level-task-data-index village1) ;; test-zone 27
+    (level-task-data-index training) ;; lltest2 28
     )
   )
 
