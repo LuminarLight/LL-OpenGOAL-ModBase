@@ -1740,7 +1740,8 @@
                  )
                )
              )
-            ((not *vis-actors*)
+            ; Add manual checks here to allow custom level actors to be visible by default.
+            ((or (not *vis-actors*) (= (-> s4-2 info custom-level?) #t))
              (let* ((s4-5 (-> s4-2 entity))
                     (s3-4 (-> s4-5 length))
                     )
