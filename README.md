@@ -1,10 +1,130 @@
-How to update so I don't forget:
+# Luminar Light's OpenGOAL Mod Base
+
+This is my personal mod base. I created it because I got tired of having to manually copy all my new changes to every repo I had. By having a mod base, I can more easily maintain all my mods.
+
+As I said, this is my personal mod base. Feel free to use it, but expect limited/no support. This mod base doesn't have any fancy stuff that would make things easier for beginners. It is designed to have as little bloat as possible.
+
+The mod base contains a level called `lltest2`. You may find some examples of the mod base's features implemented in it. Please do not change anything about the level, otherwise you will run into merge conflicts. In the future I might add more and more examples into it, to show people what are currently possible.
+
+## Mod Base's Custom Changes
+
+### Load All SBKs
+
+The c++ side now has enough "space" to allow us to load all SBK files at once. The first time the game wants to load a level sound bank (SBK file), it will load all the SBKs instead. Default functionality of the level soundbank loading is removed/disabled. I emptied the `sound-banks` property of all `level-load-info` objects, because the changes I made make that property redundant/useless.
+
+This change is currently only implemented for TPL. It wouldn't make too much sense for Jak II, because that game has sounds with same name but different content in different SBKs, so having all SBKs loaded could mess with what you hear ingame. There are no such conflicts in TPL, so it is safe there.
+
+---
+
+### Custom Music
+
+I borrowed the custom music system from 'The Forgotten Lands' mod, and made some changes to it. As far as I know, the base of that whole system was initially created by Zed, and then it was greatly expanded by Hat-Kid. Please let me know if this is inaccurate and I will adjust this section.
+
+I made some minor changes to the custom music system for now, most of it is unchanged. For the future I want to make its namings more generic/neutral (so they don't refer to The Forgotten Lands in the name). I also want to implement a way to have music variants/flavors, and I already have a clear vision for it, but I will have to rewrite a lot of code on the c++ side. And while there, I will probably do a general cleanup of that code as well.
+
+---
+
+### Navmesh Improvements (Custom Navmesh)
+
+I made changes that allow placing custom navmesh into Jak 1 levels. This will hopefully become useless one day, if proper navmesh support is ever added to OpenGOAL.
+
+The navmesh system in Jak II is more advanced, I haven't managed to figure it out yet.
+
+#### Getting Started
+
+Please keep in mind that you are expected to be familiar with custom levels and GOAL. Still, I tried to make things as understandable as possible.
+
+I would recommend copying an existing navmesh as a start. You can use the inspect method I made. The actor whose navmesh you want to copy must be loaded. Example:
+`(inspect (-> (the-as entity-actor (entity-by-name "snow-bunny-55")) nav-mesh))`
+
+You should change the origin and bounds, depending on where you want to place your navmesh.
+
+I usually just remove the nodes, because I do not understand it and things seem fine without it. But keep in mind that every navmesh that is in the game has at least one node.
+
+We do not understand route, but it is needed - otherwise game will crash. If you copy an existing navmesh, the route data is copied correctly. But since we don't understand it, for fully custom navmesh we can never have proper route data. Correct route data is essential if you want to take advantage of gap triangles (where enemies jump).
+
+You can make multiple enemies use the same navmesh. To do this, create the navmesh through code for the first actor, like in the example. And for the other actors, add a lump that tells the game to use another actor's navmesh. Reference is by aid. Example: `"nav-mesh-actor": ["uint32", 40000]`. Tip: You can do the same thing with paths, using the `path-actor` lump.
+
+If the game crashes when you approach a custom navmesh, make sure you added `:custom-hacky? #t` to your custom navmesh definition. If that is there, then check if the actor has a path. It needs a path.
+
+If something is still unclear, please look at the code. I added a lot of comments.
+
+#### Final Words
+
+I am not an expert at decompiling, so my methods were not the most efficient. But with a lot of time, I managed to figure things out. There are probably people who could do this a lot better than me. Hopefully it will happen.
+
+Also, I know my inspect method is not perfect. But it is very tedious to write such a thing, so I just included what we really need. And I think the nodes part could use a cleanup.
+
+I am happy if anyone finds this useful. But I have a request: If you learn more about navmeshes, especially things that would benefit other modders as well, please let me know. And maybe we will add it to this branch.
+
+---
+
+### Miscellaneous Minor Changes
+
+- The 'PS2 Actor Vis' setting is force-disabled in TPL. This is because we have no way to control the actor birth distance, and just using this made things very convinient.
+- Added a custom level actor vis forcing to the code, but it is probably currently unused due to the above change.
+- I have "fixed" the index of `test-zone` - it should be unique, but it wasn't. This will make it much easier to add and understand new levels, believe me. Always set the index correctly for any new levels you add.
+- Use the `BIG_COLLIDE_CACHE_SIZE` by default. This should make the game able to handle much more collision ingame.
+- Ambient music marks will now try to display the music and flava data of the marks.
+- The code now should refer to the `(game-task max)` everywhere it is supposed to. No more hardcoded numbers. This makes it safe to add new tasks.
+- Moved the definition of `*game-counts*` from `progress-static.gc` to `game-info.gc` - this needed to be done because we want to be able to add new game count entries, and that can only be done through code for now. Also added a commented out example of how to add new entries. It is at the beginning of the method below it. I don't want to add a live/working example, as that would bloat the mod base. To avoid merge conflicts, you should probably leave the example comment alone, and just add your stuff below it.
+- Added two new properties to the `level-load-info` type: `custom-level?` (you should set this to true for your custom levels), and `custom-music` (if your level uses custom music). Keep in mind that both of these are of type `symbol`. The default value of that type is 0. So if you want to check these in conditions, you need to be aware that they won't actually be `#f` in the levels where they weren't defined... they will be 0, which is actually considered "not false" in GOAL, so "true". I am considering defining these properties with value `#f` in the existing levels...
+- Commented out some annoying "Failed to find texture at..." console logs, because they were being spammed. I don't think they are really useful nowadays anyway.
+- Commented out an assert (`ASSERT(diff < 7);`), which was potentially making it more difficult to build custom levels that had ugly collision geometry. I am not sure how much it helps though, but hopefully it helps somewhat.
+- Added a hack that allows us to define the volumes for the water volumes. This hack was invented by Hat-Kid, and I still don't understand why it works, but it does.
+- Borrowed a trick from the other mod base (the one by barg and Zed). As you may know, the project dir is found by looking for `jak-project` in the directory path. But if your repository doesn't have that name, it won't be found. They rewrote the function that finds the project directory. But I think it is not working on all platforms yet. I will keep observing their modbase and update this if necessary. What we borrowed for now is working fine on Windows.
+- Improved the debug Nav Mesh display. If you enable 'Nav Mesh Extras', you will see the IDs of the vertexes and the triangles.
+
+---
+
+## Future Plans
+
+- Implement flavor/variant support for custom music.
+- Allow overriding level's custom music in certain situations.
+- Fix the github action. Right now it fails due to that library used for the custom music.
+- Understand more about the navmesh system (node, route).
+- Show how to add new `battle` actors, also show the part that needs to be done through code. I have already touched the battle system in the past. I should clear things up and implement an example.
+- Rewrite the warp gate system, to make it more extendable. I imagine a lot of custom level mods will want to use the warp gate. But its code is ugly and not easy to extend.
+- Make this mod base compatible with the Unofficial Mod Launcher (the one by barg and Zed).
+
+## How To Use
+
+While you may think that forking this mod base is preferable, keep in mind that a fork of a public repo can not be private. For this reason, you might want to consider duplicating this repo, and adding this mod base as a remote so you can update from it.
+
+Here is a guide for duplicating the repo: https://docs.github.com/en/repositories/creating-and-managing-repositories/duplicating-a-repository
+
+Once your repository exists, you should add this mod base as a remote. This will allow you to stay up to date:
 
 ```
-git remote add vanilla <jak-project git url here>
+git remote add ll-modbase https://github.com/LuminarLight/LL-OpenGOAL-ModBase
+```
+
+The command above only needs to be ran once per repository. Afterwards, here is how you can update from the mod base any time:
+
+```
+git fetch ll-modbase
+git merge ll-modbase/master --allow-unrelated-histories --no-commit
+```
+
+The `--no-commit` flag will prevent the command from automatically doing a commit. This will allow you to review all the changes. I think this is very preferable, so please keep using this flag. Also, if you remove the flag, things will still only be instantly commited if there are no conflicts.
+
+### Updating from Vanilla
+
+This is how I update the mod base to stay up to date with OpenGOAL. You don't need to do this (I am supposed to do this to keep the mod base up to date), it is only here so I don't forget (first line only needs to be ran once per repo):
+
+```
+git remote add vanilla https://github.com/open-goal/jak-project
 git fetch vanilla
 git merge vanilla/master --allow-unrelated-histories --no-commit
 ```
+
+## Final Words
+
+As I said, this is my personal mod base. Support is limited/nonexistent. Still, I imagine there may be people who will find it useful. I am happy if that happens. And you can still reach out to me if you want, but I won't be able to help with basic stuff.
+
+I tried to mention if a change was developed by someone else. If I missed anyone, please let me know and I will correct it. On the other hand, if you use this mod base or parts of it, please be respectful regarding crediting the people behind the features/changes.
+
+*~~Luminar Light*
 
 ---
 
