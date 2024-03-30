@@ -646,7 +646,7 @@
     (sound-unit-vector-convert (-> gp-0 cam-forward) fwd)
     (sound-unit-vector-convert (-> gp-0 cam-left) left)
     (set! (-> gp-0 cam-scale) (the int (* 65536.0 scale)))
-    (set! (-> gp-0 cam-inverted) (if (logtest? (-> *game-info* secrets) (game-secrets screen-flip))
+    (set! (-> gp-0 cam-inverted) (if (logtest? (-> *game-info* secrets) (game-secrets hflip-screen))
                                      1
                                      0
                                      )
@@ -1245,7 +1245,7 @@
     (sound-bank-load (string->sound-name (symbol->string s5-0)) 4 10)
     (set! (-> *level* sound-bank (* gp-0 2) name) s5-0)
     )
-  (set! (-> *level* sound-bank (* gp-0 2) mode) (the-as uint 4))
+  (set! (-> *level* sound-bank (* gp-0 2) mode) (sound-bank-mode full))
   )
 
 (defun loader-test-command ((cmd sound-command) (param uint))

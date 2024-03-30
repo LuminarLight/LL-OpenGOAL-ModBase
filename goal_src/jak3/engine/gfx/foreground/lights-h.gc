@@ -8,9 +8,11 @@
 ;; DECOMP BEGINS
 
 (deftype vu-lights (structure)
-  ((direction  vector  3 :inline)
-   (color      vector  3 :inline)
-   (ambient    vector  :inline)
+  ((direction   vector  3 :inline)
+   (color       vector  3 :inline)
+   (ambient     vector  :inline)
+   (fade-int    uint32  :offset  44)
+   (fade-flags  uint32  :offset  28)
    )
   )
 
@@ -54,6 +56,7 @@
   ((index  uint16)
    (count  uint16)
    )
+  :pack-me
   )
 
 

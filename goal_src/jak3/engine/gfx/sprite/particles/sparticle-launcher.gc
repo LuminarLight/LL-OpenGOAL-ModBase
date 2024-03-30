@@ -5,5 +5,39 @@
 ;; name in dgo: sparticle-launcher
 ;; dgos: GAME
 
+(defmacro launch-particles (&key (system *sp-particle-system-2d*)
+                                 particle
+                                 origin
+                                 &key (launch-state (the-as sparticle-launch-state #f))
+                                 &key (launch-control (the-as sparticle-launch-control #f))
+                                 &key (rate 1.0)
+                                 &key (origin-is-matrix #f))
+  (if origin-is-matrix
+      `(sp-launch-particles-var
+         ,system
+         ,particle
+         (the matrix ,origin)
+         ,launch-state
+         ,launch-control
+         ,rate #|(if (= (get-video-mode) 'custom) (/ (-> *display* time-factor) 5.0) ,rate)|#)
+      `(begin
+         (vector-copy! (-> *launch-matrix* trans) (the vector ,origin))
+         (sp-launch-particles-var
+            ,system
+            ,particle
+            *launch-matrix*
+            ,launch-state
+            ,launch-control
+            ,rate #|(if (= (get-video-mode) 'custom) (/ (-> *display* time-factor) 5.0) ,rate)|#)
+         )
+      )
+  )
+
 ;; DECOMP BEGINS
 
+;; TODO: stub
+  (kmemopen global "part-tables")
+  (define *part-id-table* (new 'global 'boxed-array sparticle-launcher 5500))
+  (define *part-group-id-table* (new 'global 'boxed-array sparticle-launch-group 1700))
+  (define *sp-temp* 0.0)
+  (kmemclose)

@@ -13,7 +13,7 @@
 #include "decompiler/ObjectFile/LinkedObjectFile.h"
 #include "decompiler/analysis/final_output.h"
 
-#include "third-party/fmt/core.h"
+#include "fmt/core.h"
 
 namespace decompiler {
 
@@ -984,6 +984,12 @@ const std::unordered_map<
                 ArrayFieldDecompMeta(TypeSpec("sphere"),
                                      16,
                                      ArrayFieldDecompMeta::Kind::REF_TO_INLINE_ARR)}}},
+             {"sparticle-launcher",
+              {{"init-specs", ArrayFieldDecompMeta(TypeSpec("sp-field-init-spec"), 16)}}},
+             {"sparticle-launch-group",
+              {{"launcher", ArrayFieldDecompMeta(TypeSpec("sparticle-group-item"), 32)}}},
+             {"simple-sprite-system",
+              {{"data", ArrayFieldDecompMeta(TypeSpec("sprite-glow-data"), 64)}}},
          }}};
 
 goos::Object decompile_structure(const TypeSpec& type,
@@ -1460,7 +1466,7 @@ goos::Object decompile_structure(const TypeSpec& type,
         } else if (word.kind() == LinkedWord::EMPTY_PTR) {
           field_defs_out.emplace_back(field.name(), pretty_print::to_symbol("'()"));
         } else if (word.kind() == LinkedWord::TYPE_PTR) {
-          if (field.type() != TypeSpec("type")) {
+          if (!ts.tc(field.type(), TypeSpec("type"))) {
             throw std::runtime_error(
                 fmt::format("Field {} in type {} offset {} had a reference to type {}, but the "
                             "type of the field is not type.",
@@ -1524,6 +1530,11 @@ goos::Object bitfield_defs_print(const TypeSpec& type,
       result.push_back(pretty_print::to_symbol(fmt::format(
           ":{} {}", def.field_name,
           bitfield_defs_print(def.nested_field->field_type, def.nested_field->fields).print())));
+    } else if (def.is_float) {
+      float f;
+      memcpy(&f, &def.value, 4);
+      result.push_back(
+          pretty_print::to_symbol(fmt::format(":{} {}", def.field_name, float_to_string(f, true))));
     } else {
       result.push_back(
           pretty_print::to_symbol(fmt::format(":{} #x{:x}", def.field_name, def.value)));
@@ -2067,9 +2078,10 @@ std::vector<BitFieldConstantDef> decompile_bitfield_from_int(const TypeSpec& typ
   return *try_decompile_bitfield_from_int(type, ts, value, true, {});
 }
 
-std::vector<std::string> decompile_bitfield_enum_from_int(const TypeSpec& type,
-                                                          const TypeSystem& ts,
-                                                          u64 value) {
+std::optional<std::vector<std::string>> try_decompile_bitfield_enum_from_int(const TypeSpec& type,
+                                                                             const TypeSystem& ts,
+                                                                             u64 value,
+                                                                             bool require_success) {
   u64 reconstructed = 0;
   std::vector<std::string> result;
   auto type_info = ts.try_enum_lookup(type.base_type());
@@ -2105,10 +2117,14 @@ std::vector<std::string> decompile_bitfield_enum_from_int(const TypeSpec& type,
   }
 
   if (reconstructed != value) {
-    throw std::runtime_error(fmt::format(
-        "Failed to decompile bitfield enum {}. Original value is 0x{:x} but we could only "
-        "make 0x{:x} using the available fields.",
-        type.print(), value, reconstructed));
+    if (require_success) {
+      throw std::runtime_error(fmt::format(
+          "Failed to decompile bitfield enum {}. Original value is 0x{:x} but we could only "
+          "make 0x{:x} using the available fields.",
+          type.print(), value, reconstructed));
+    } else {
+      return std::nullopt;
+    }
   }
 
   if (bit_count == (int)result.size()) {
@@ -2124,6 +2140,14 @@ std::vector<std::string> decompile_bitfield_enum_from_int(const TypeSpec& type,
   }
 
   return result;
+}
+
+std::vector<std::string> decompile_bitfield_enum_from_int(const TypeSpec& type,
+                                                          const TypeSystem& ts,
+                                                          u64 value) {
+  auto ret = try_decompile_bitfield_enum_from_int(type, ts, value, true);
+  ASSERT(ret.has_value());
+  return *ret;
 }
 
 std::string decompile_int_enum_from_int(const TypeSpec& type, const TypeSystem& ts, u64 value) {

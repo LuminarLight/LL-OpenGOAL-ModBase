@@ -60,6 +60,20 @@
   (set-stereo-mode)
   )
 
+(defenum sound-bank-mode
+  :type uint32
+  (none 0)
+  (unknown 1)
+  (common 2)
+  (mode 3)
+  (full 4)
+  (half 5)
+  (halfa 6)
+  (halfb 7)
+  (halfc 8)
+  (virtual 9)
+  )
+
 ;; +++sound-group
 (defenum sound-group
   :bitfield #t
@@ -126,6 +140,47 @@
     )
   )
 
+;; TODO change macro back once sound-group is figured out for jak 3
+(defmacro sound-play (name &key (id (new-sound-id))
+                           &key (vol 100.0) &key (pitch 0) &key (bend 0)
+                           &key (group sfx)
+                           &key (position #t))
+  `(sound-play-by-name (static-sound-name ,name) ,id (the int (* (/ 1024.0 100.0) ,vol)) (the int (* 1524.0 ,pitch)) ,bend (sound-group) ,position))
+
+(defmacro sound-vol (vol)
+  "convert to sound volume units"
+  (if (number? vol)
+      (* 1 (/ (* vol 1024) 100))
+      `(the int (/ (* ,vol 1024) 100))
+      )
+  )
+
+(defmacro static-sound-spec (name &key (num 1.0) &key (group 1)
+                                  &key (volume #f)
+                                  &key (pitch-mod 0)
+                                  &key (fo-min 0) &key (fo-max 0)
+                                  &key (fo-curve 0)
+                                  &key (mask ()))
+  (let ((snd-mask mask)
+        (snd-volume 100.0))
+    (when (nonzero? fo-max) (cons! snd-mask 'fo-max))
+    (when (nonzero? fo-min) (cons! snd-mask 'fo-min))
+    (when (nonzero? fo-curve) (cons! snd-mask 'fo-curve))
+    (when (nonzero? pitch-mod) (cons! snd-mask 'pitch))
+    (when volume (cons! snd-mask 'volume) (set! snd-volume volume))
+    `(new 'static 'sound-spec
+          :sound-name (static-sound-name ,name)
+          :num ,num
+          :group ,group
+          :volume (sound-vol ,snd-volume)
+          :pitch-mod ,pitch-mod
+          :fo-min ,fo-min
+          :fo-max ,fo-max
+          :fo-curve ,fo-curve
+          :mask (sound-mask ,@snd-mask)
+          ))
+  )
+
 
 (define-extern get-sound-buffer-entry (function pointer))
 (define-extern sound-set-ear-trans (function vector vector vector vector vector float int))
@@ -152,8 +207,8 @@
   )
 
 (deftype sound-name (uint128)
-  ((lo  uint64  :offset 0) ;; added to help with cases where they access it by u64.
-   (hi  uint64  :offset 64)
+  ((lo uint64 :offset   0 :size  64)
+   (hi uint64 :offset  64 :size  64)
    )
   )
 
@@ -167,17 +222,17 @@
 
 
 (deftype sound-play-params (structure)
-  ((mask       uint16)
-   (pitch-mod  int16)
-   (bend       int16)
-   (fo-min     int16)
-   (fo-max     int16)
-   (fo-curve   int8)
-   (priority   int8)
-   (volume     int32)
-   (trans      int32  3)
-   (group      uint8)
-   (reg        uint8  3)
+  ((mask           uint16)
+   (pitch-mod      int16)
+   (bend           int16)
+   (fo-min         int16)
+   (fo-max         int16)
+   (fo-curve       int8)
+   (priority       int8)
+   (volume         int32)
+   (trans          int32   3)
+   (group          uint8)
+   (reg            uint8   3)
    (group-and-reg  uint32  :overlay-at group)
    )
   :pack-me
@@ -411,7 +466,7 @@
 
 (deftype sound-bank-state (structure)
   ((name  symbol)
-   (mode  uint32)
+   (mode  sound-bank-mode)
    )
   :pack-me
   )
