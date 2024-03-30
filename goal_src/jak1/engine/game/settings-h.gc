@@ -38,6 +38,7 @@
    (music-volume-movie    float)
    (sfx-volume-movie      float)
    (music                 symbol)
+   (custom-music          symbol)
    (bg-r                  float)
    (bg-g                  float)
    (bg-b                  float)

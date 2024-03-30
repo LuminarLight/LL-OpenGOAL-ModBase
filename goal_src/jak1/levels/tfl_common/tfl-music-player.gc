@@ -5,12 +5,12 @@
 (define *tfl-music-stop* #f)
 
 (deftype tfl-music-player (process)
-  ((level level)
+  ((stored-music symbol)
    )
   (:methods
     (play! (_type_) none)
     (stop! (_type_) none)
-    (set-level! (_type_) none)
+    (set-stored-music! (_type_) none)
     )
   (:states
     tfl-music-player-idle
@@ -25,36 +25,29 @@
   (-> *setting-control* current music-volume)
   )
 
-(defmethod set-level! ((this tfl-music-player))
-  (set! (-> this level) (the-as level (aif (level-get-target-inside *level*) it #f)))
+(defmethod set-stored-music! ((this tfl-music-player))
+  (set! (-> this stored-music) (-> *setting-control* default custom-music))
   (none)
   )
 
-(defun tfl-level-has-music? ((lev level))
-  (when (!= (-> lev info custom-music) 0)
+(defun is-there-music? ((this tfl-music-player))
+  (when (and (!= (-> this stored-music) 0) (!= (-> this stored-music) #f))
     (return #t)
     )
   #f
   )
 
-(defun tfl-level->musicstring ((lev level))
-  (return (symbol->string (-> lev info custom-music)))
-  (the string #f)
-  )
-
 (defmethod play! ((this tfl-music-player))
-  ;; (format #t "tfl-music-player::play!~%")
-  (when (tfl-level-has-music? (-> this level))
+  (when (is-there-music? this)
     (if *tfl-music-playing?*
       (stop! this)
       )
-    (play-tfl-music (tfl-level->musicstring (-> this level)) (tfl-music-player-volume))
+    (play-tfl-music (symbol->string (-> this stored-music)) (tfl-music-player-volume))
     )
   (none)
   )
 
 (defmethod stop! ((this tfl-music-player))
-  ;; (format #t "tfl-music-player::stop!~%")
   (when *tfl-music-playing?*
     (true! *tfl-music-stop*)
     )
@@ -77,18 +70,15 @@
 
 (defbehavior tfl-music-player-init-by-other tfl-music-player ()
   (set! *tfl-music-player* (the (pointer tfl-music-player) (process->ppointer self)))
-  (set-level! self)
+  (set-stored-music! self)
   (go tfl-music-player-idle)
   (none)
   )
 
 (defbehavior tfl-music-player-post tfl-music-player ()
-  ;; (format 0 "POST tfl-music-player~%")
-  (let ((level (the-as level (aif (level-get-target-inside *level*) it #f))))
-    ;; (format *stdcon* "tfl-music-player:~%cur-lev ~A~%level ~A~%playing? ~A~%state: ~A stop: ~A~%"
-    ;;   level (-> self level) *tfl-music-playing?* (-> self state name) *tfl-music-stop*)
-    (when (and (!= (-> self level) level))
-      (set-level! self)
+  (let ((actual (-> *setting-control* default custom-music)))
+    (when (!= (-> self stored-music) actual)
+      (set-stored-music! self)
       (stop! self)
       )
     )
@@ -102,7 +92,7 @@
 (defstate tfl-music-player-idle (tfl-music-player)
   :code sleep-code
   :trans (behavior ()
-    (when (and (-> self level) (tfl-level-has-music? (-> self level)))
+    (when (is-there-music? self)
       (go tfl-music-player-playing)
       )
     )

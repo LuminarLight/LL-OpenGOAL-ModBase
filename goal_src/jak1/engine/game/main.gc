@@ -603,6 +603,7 @@
               (when (= (-> a1-6 status) 'active)
                 (if (and (= (-> a1-6 name) v1-13) (-> *level* play?))
                     (set! (-> *setting-control* default music) (-> a1-6 info music-bank))
+                    (set! (-> *setting-control* default custom-music) (-> a1-6 info custom-music))
                     )
                 )
               )

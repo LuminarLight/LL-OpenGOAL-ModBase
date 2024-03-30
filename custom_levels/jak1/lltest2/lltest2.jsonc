@@ -47,7 +47,7 @@
       "lump": {
         "name": "lltest2-ambient-1",
         "type": "'music",
-        "flava": "'danger"
+        "custom-music": "'lltest-sphere"
       }
     }
   ],
