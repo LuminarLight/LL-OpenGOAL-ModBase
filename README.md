@@ -20,7 +20,9 @@ This change is currently only implemented for TPL. It wouldn't make too much sen
 
 I borrowed the custom music system from 'The Forgotten Lands' mod, and made some changes to it. As far as I know, the base of that whole system was initially created by Zed, and then it was greatly expanded by Hat-Kid. Please let me know if this is inaccurate and I will adjust this section.
 
-I made some minor changes to the custom music system for now, most of it is unchanged. For the future I want to make its namings more generic/neutral (so they don't refer to The Forgotten Lands in the name). I also want to implement a way to have music variants/flavors, and I already have a clear vision for it, but I will have to rewrite a lot of code on the c++ side. And while there, I will probably do a general cleanup of that code as well.
+I implemented a way to use custom music for music ambients. To use it, just use the `custom-music` lump instead of the `music` lump in your music ambient.
+
+I made some other minor changes to the custom music system for now, the GOAL side is quite different now but the c++ side is mostly unchanged. For the future I want to make its namings more generic/neutral (so they don't refer to The Forgotten Lands in the name). I also want to implement a way to have music variants/flavors, and I already have a clear vision for it, but I will have to rewrite a lot of code on the c++ side. And while there, I will probably do a general cleanup of that code as well.
 
 ---
 
