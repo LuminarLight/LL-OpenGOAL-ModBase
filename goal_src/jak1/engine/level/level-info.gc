@@ -2030,7 +2030,7 @@
                            :sky #t
                            :continues '((new 'static 'continue-point
                                              :name "lltest2-start"
-                                             :level 'test-zone
+                                             :level 'lltest2
                                              :trans (new 'static 'vector :x (meters 0.) :y (meters 600.) :z (meters 0.) :w 1.0)
                                              :quat (new 'static 'quaternion  :w 1.0)
                                              :camera-trans (new 'static 'vector :x 0.0 :y 4096.0 :z 0.0 :w 1.0)
