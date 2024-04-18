@@ -90,8 +90,8 @@ nav-enemy-default-event-handler
   )
 
 (defmethod nav-enemy-method-37 ((this sharkey))
-  ;; borrowed from lurkercrab, replacing what was originally here
-  (if (logtest? (nav-control-flags navcf19) (-> this nav flags))
+  (if (-> this enable-patrol)
+    (if (logtest? (nav-control-flags navcf19) (-> this nav flags))
       (seek-to-point-toward-point!
         (-> this collide-info)
         (-> this nav target-pos)
@@ -105,6 +105,15 @@ nav-enemy-default-event-handler
         (-> this turn-time)
         )
       )
+    (let ((s5-0 (new 'stack-no-clear 'vector)))
+      (when (< 8192.0 (vector-length (-> this nav travel)))
+        (vector-normalize-copy! s5-0 (-> this nav travel) 1.0)
+        (vector-deg-seek (-> this dir) (-> this dir) s5-0 (* 65536.0 (seconds-per-frame)))
+        (vector-normalize! (-> this dir) 1.0)
+        (forward-up->quaternion (-> this collide-info quat) (-> this dir) *up-vector*)
+        )
+      )
+    )
   0
   (none)
   )
@@ -173,7 +182,7 @@ nav-enemy-default-event-handler
 
 (defbehavior sharkey-reset-position sharkey ()
   (set! (-> self collide-info trans quad) (-> self entity extra trans quad))
-  (set! (-> self collide-info quat quad) (-> self entity quat quad))
+  (set! (-> self collide-info quat quad) (-> self entity quat quad)) ;; Can't hurt to have it here.
   0
   (none)
   )
@@ -279,6 +288,9 @@ nav-enemy-default-event-handler
   :trans (behavior ()
     (if (sharkey-notice-player?)
         (go-virtual nav-enemy-chase)
+        )
+    (if (not (-> self enable-patrol)) ;; This workaround is needed because removing the post breaks normal behaviour but leaving it prevents proper patrolling.
+        (go-virtual nav-enemy-idle)
         )
     )
   :code (behavior ()
@@ -645,7 +657,9 @@ nav-enemy-default-event-handler
   (set! (-> this spawn-distance) (res-lump-float (-> this entity) 'distance :default 122880.0))
   (set! (-> this chase-speed) (res-lump-float (-> this entity) 'speed :default 49152.0))
   (set! (-> this y-speed) (-> this chase-speed))
-  (set! (-> this enable-patrol) #t)
+  ;; If you replace #t with the commented out code, you can decide whether the sharkey should patrol or not, using a res lump property.
+  ;; If you give your actor a 'patroller' lump of type int32 and with a value greater than 0, it will make the sharkey be a patrolling one.
+  (set! (-> this enable-patrol) #t);(if (> (res-lump-value (-> this entity) 'patroller int32) 0) #t #f))
   (set! (-> this sound-id) (new-sound-id))
   (set! (-> this enemy-info cam-vert) 49152.0)
   (go (method-of-object this nav-enemy-idle))
