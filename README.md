@@ -26,6 +26,23 @@ I made some other minor changes to the custom music system for now, the GOAL sid
 
 ---
 
+### Load Boundary Improvements
+
+I have extended the functionality of the load boundaries, to allow restricting them by tasks. You can do this with the new `:tasks` thing I added. If it is not added, things will behave like before. But when it is there, all the listed tasks will need to be completed before the load boundary works. Due to my lack of skill, you have to pass the tasks as strings. But hopefully it can be improved in the future.
+
+See here for an example:
+
+```
+(static-load-boundary :flags (player )
+  :top 322236.6562  :bot -524288.0000
+  :points (  -140670.9062 -353851.7500   6646.9482 -375187.6875   -4327.1040 -433914.7187 )
+  :fwd (load village1 firecanyon)
+  :tasks ("training-gimmie" "training-door")
+  )
+```
+
+---
+
 ### Navmesh Improvements (Custom Navmesh)
 
 I made changes that allow placing custom navmesh into Jak 1 levels. This will hopefully become useless one day, if proper navmesh support is ever added to OpenGOAL.

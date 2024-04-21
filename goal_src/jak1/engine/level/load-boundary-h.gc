@@ -78,6 +78,7 @@
    (cmd-fwd     load-boundary-crossing-command  :inline)
    (cmd-bwd     load-boundary-crossing-command  :inline)
    (rejector    vector                          :inline)
+   (tasks (array string))
    (data        lbvtx                           1 :inline)
    (data2       lbvtx                           :inline :dynamic :overlay-at (-> data 0))
    )
