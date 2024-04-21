@@ -419,8 +419,9 @@
                                 &key top &key bot
                                 &key points
                                 &key (fwd (invalid #f #f))
-                                &key (bwd (invalid #f #f)))
-  `(new 'static 'boxed-array :type object :length 4 :allocated-length 4
+                                &key (bwd (invalid #f #f))
+                                &key (tasks ()))
+  `(new 'static 'boxed-array :type object :length 5 :allocated-length 5
     (the binteger (load-boundary-flags ,@flags))
     (new 'static 'boxed-array :type float :length ,(+ 2 (length points)) :allocated-length ,(+ 2 (length points))
       ,top ,bot
@@ -428,6 +429,9 @@
       )
     '((the binteger (load-boundary-cmd ,(first fwd))) ,(second fwd) ,(third fwd))
     '((the binteger (load-boundary-cmd ,(first bwd))) ,(second bwd) ,(third bwd))
+    (new 'static 'boxed-array :type string :length ,(length tasks) :allocated-length ,(length tasks)
+      ,@tasks
+      )
     )
   )
 
@@ -839,6 +843,7 @@
       (set! (-> v1-8 lev0) (the-as basic (car (cdr a0-13))))
       (set! (-> v1-8 lev1) (the-as basic (car (cdr (cdr a0-13)))))
       )
+    (set! (-> v0-0 tasks) (the-as (array string) (-> arg0 4)))
     )
   (none)
   )
@@ -2076,6 +2081,11 @@
         )
     (if (= (the-as symbol s5-0) 2)
         (set! s4-0 (-> arg0 cmd-bwd))
+        )
+    (dotimes (i (-> arg0 tasks length))
+        (when (not (task-complete? *game-info* (string->enum game-task (-> arg0 tasks i) (game-task complete))))
+            (set! s4-0 #f)
+            )
         )
     (when s4-0
       (cond
