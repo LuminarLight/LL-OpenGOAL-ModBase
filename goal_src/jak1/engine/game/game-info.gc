@@ -176,6 +176,23 @@
   ;; (set! (-> *game-counts* data 16 money-count) 150)
   ;; (set! (-> *game-counts* data 16 buzzer-count) 7)
 
+  (let ((total-cells 0)
+        (total-buzzers 0)
+        (total-orbs 0))
+    (dotimes (s5-0 (length *level-task-data*))
+      (let ((s4-0 (-> *level-task-data* s5-0)))
+        (when (!= s4-0 #f)
+          (set! total-cells (+ total-cells (-> s4-0 nb-of-tasks)))
+          (set! total-orbs (+ total-orbs (-> *game-counts* data s5-0 money-count)))
+          (set! total-buzzers (+ total-buzzers (-> *game-counts* data s5-0 buzzer-count)))
+          )
+        )
+      )
+    (set! (-> this total-nb-of-fuel-cells) total-cells)
+    (set! (-> this total-nb-of-buzzers) total-buzzers)
+    (set! (-> this total-nb-of-orbs) total-orbs)
+    )
+
   (local-vars (v0-0 int) (sv-96 symbol))
   (case cause
     (('dead)

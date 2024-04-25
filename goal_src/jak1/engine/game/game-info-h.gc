@@ -182,6 +182,9 @@
    (death-pos              vector-array)
    (dummy                  basic)
    (auto-save-count        int32)
+   (total-nb-of-buzzers    int32)
+   (total-nb-of-orbs       int32)
+   (total-nb-of-fuel-cells int32)
    )
   (:methods
     (initialize! (_type_ symbol game-save string) _type_)

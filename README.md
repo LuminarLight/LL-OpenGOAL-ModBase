@@ -93,6 +93,7 @@ I am happy if anyone finds this useful. But I have a request: If you learn more 
 - Added a hack that allows us to define the volumes for the water volumes. This hack was invented by Hat-Kid, and I still don't understand why it works, but it does.
 - Borrowed a trick from the other mod base (the one by barg and Zed). As you may know, the project dir is found by looking for `jak-project` in the directory path. But if your repository doesn't have that name, it won't be found. They rewrote the function that finds the project directory. But I think it is not working on all platforms yet. I will keep observing their modbase and update this if necessary. What we borrowed for now is working fine on Windows.
 - Improved the debug Nav Mesh display. If you enable 'Nav Mesh Extras', you will see the IDs of the vertexes and the triangles.
+- When you press L2+UP, the HUD now shows the true maximum obtainable number of orbs, flies, and cells instead of the hardcoded values of 2000, 112, and 101.
 
 ---
 
