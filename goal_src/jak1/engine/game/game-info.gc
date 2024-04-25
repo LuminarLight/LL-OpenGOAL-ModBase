@@ -191,7 +191,7 @@
     (set! (-> this total-nb-of-fuel-cells) total-cells)
     (set! (-> this total-nb-of-buzzers) total-buzzers)
     (set! (-> this total-nb-of-orbs) total-orbs)
-    )  
+    )
 
   (local-vars (v0-0 int) (sv-96 symbol))
   (case cause
