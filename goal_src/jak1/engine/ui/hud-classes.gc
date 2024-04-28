@@ -1438,7 +1438,10 @@
             (draw-string-xy-scaled
               (string-format
                 " ~D~% /~D"
-                (buzzer-count *game-info* (-> *level-task-data* lvl-idx task-info (-> *level-task-data* lvl-idx buzzer-task-index) task-id))
+                (if (> -1 (-> *level-task-data* lvl-idx buzzer-task-index))
+                  (buzzer-count *game-info* (-> *level-task-data* lvl-idx task-info (-> *level-task-data* lvl-idx buzzer-task-index) task-id))
+                  0
+                  )
                 (-> *game-counts* data lvl-idx buzzer-count)
                 )
               buf
