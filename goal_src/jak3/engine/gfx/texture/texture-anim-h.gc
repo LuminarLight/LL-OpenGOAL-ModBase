@@ -73,7 +73,8 @@
 
 
 (deftype texture-anim-array (array)
-  ()
+  ((array-data  texture-anim  :dynamic)
+   )
   (:methods
     (init! (_type_) _type_)
     (clear! (_type_) _type_)
@@ -152,7 +153,7 @@
    (alpha-near   float)
    (alpha-far    float)
    (alpha-delta  float)
-   (color        uint32)
+   (color        rgba)
    )
   )
 

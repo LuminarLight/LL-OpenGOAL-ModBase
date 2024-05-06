@@ -175,8 +175,10 @@ u64 execute(void* ctxt) {
   c->load_symbol2(v1, cache.math_camera);           // lw v1, *math-camera*(s7)
   c->lqc2(vf26, 812, v1);                           // lqc2 vf26, 812(v1)
   c->lqc2(vf27, 812, v1);                           // lqc2 vf27, 812(v1)
-  c->vadd_bc(DEST::xy, BC::w, vf26, vf26, vf0);     // vaddw.xy vf26, vf26, vf0
-  c->vadd_bc(DEST::x, BC::w, vf26, vf26, vf0);      // vaddw.x vf26, vf26, vf0
+  // shadow hack begin
+  // c->vadd_bc(DEST::xy, BC::w, vf26, vf26, vf0);     // vaddw.xy vf26, vf26, vf0
+  // c->vadd_bc(DEST::x, BC::w, vf26, vf26, vf0);      // vaddw.x vf26, vf26, vf0
+  // shadow hack end
   c->lw(v1, 68, a2);                                // lw v1, 68(a2)
   c->lqc2(vf25, 44, a2);                            // lqc2 vf25, 44(a2)
   c->lqc2(vf23, 12, a2);                            // lqc2 vf23, 12(a2)
@@ -187,12 +189,29 @@ u64 execute(void* ctxt) {
   c->lqc2(vf31, 48, v1);                            // lqc2 vf31, 48(v1)
   c->load_symbol2(v1, cache.video_params);          // lw v1, *video-params*(s7)
   c->mov64(v1, v1);                                 // or v1, v1, r0
+  // shadow hack begin
+  c->lw(t0, 16, v1);    // lw t0, 16(v1)
+  // multiply shadow offset by font scale and screen x scale
+  c->vfs[vf26].f[0] += c->gprs[t0].f[0] * 2;
+  c->vfs[vf26].f[1] += 1;
+  // shadow hack end
   c->lqc2(vf1, 32, v1);                             // lqc2 vf1, 32(v1)
   c->vdiv(vf0, BC::w, vf25, BC::w);                 // vdiv Q, vf0.w, vf25.w
   c->lqc2(vf2, 16, v1);                             // lqc2 vf2, 16(v1)
   c->vmul(DEST::x, vf25, vf25, vf1);                // vmul.x vf25, vf25, vf1
   c->vmul(DEST::x, vf23, vf23, vf1);                // vmul.x vf23, vf23, vf1
-  c->vmul(DEST::x, vf24, vf24, vf1);                // vmul.x vf24, vf24, vf1
+  // pc-hack
+  c->lw(v1, 64, a2);                                // lw v1, 64(a2)
+  if (!(c->gprs[v1].du32[0] & (1 << 6))) {
+    // pc-hack flag
+    c->vmul(DEST::x, vf24, vf24, vf1);                // vmul.x vf24, vf24, vf1
+  }
+  if (!(c->gprs[v1].du32[0] & (1 << 5))) {
+    // small font, readjust shadow
+    c->vfs[vf26].f[0] -= (c->gprs[t0].f[0] * 2) - (c->vfs[vf25].f[3] * c->gprs[t0].f[0] * 2);
+    c->vfs[vf26].f[1] -= 1 - (c->vfs[vf25].f[3] * 1);
+  }
+  // pc-hack end
   c->vwaitq();                                      // vwaitq
   c->vmulq(DEST::xy, vf25, vf25);                   // vmulq.xy vf25, vf25, Q
   c->vmulq(DEST::xy, vf23, vf23);                   // vmulq.xy vf23, vf23, Q
@@ -1361,7 +1380,7 @@ block_146:
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
-  c->vftoi4(DEST::xyzw, vf1, vf1);                  // vftoi4.xyzw vf1, vf1
+  c->vftoi4_sat(DEST::xyzw, vf1, vf1);              // vftoi4.xyzw vf1, vf1
   // nop                                            // sll r0, r0, 0
   c->vmulq(DEST::xyz, vf2, vf2);                    // vmulq.xyz vf2, vf2, Q
   // nop                                            // sll r0, r0, 0
@@ -1383,7 +1402,7 @@ block_146:
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
-  c->vftoi4(DEST::xyzw, vf2, vf2);                  // vftoi4.xyzw vf2, vf2
+  c->vftoi4_sat(DEST::xyzw, vf2, vf2);              // vftoi4.xyzw vf2, vf2
   // nop                                            // sll r0, r0, 0
   c->vmulq(DEST::xyz, vf3, vf3);                    // vmulq.xyz vf3, vf3, Q
   // nop                                            // sll r0, r0, 0
@@ -1405,7 +1424,7 @@ block_146:
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
-  c->vftoi4(DEST::xyzw, vf3, vf3);                  // vftoi4.xyzw vf3, vf3
+  c->vftoi4_sat(DEST::xyzw, vf3, vf3);              // vftoi4.xyzw vf3, vf3
   // nop                                            // sll r0, r0, 0
   c->vmulq(DEST::xyz, vf4, vf4);                    // vmulq.xyz vf4, vf4, Q
   // nop                                            // sll r0, r0, 0
@@ -1435,7 +1454,7 @@ block_152:
   c->vadd_bc(DEST::x, BC::w, vf23, vf23, vf14);     // vaddw.x vf23, vf23, vf14
 
 block_153:
-  c->vftoi4(DEST::xyzw, vf4, vf4);                  // vftoi4.xyzw vf4, vf4
+  c->vftoi4_sat(DEST::xyzw, vf4, vf4);              // vftoi4.xyzw vf4, vf4
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
@@ -2187,7 +2206,7 @@ block_225:
   // nop                                            // sll r0, r0, 0
   c->lqc2(vf11, 704, v1);                           // lqc2 vf11, 704(v1)
   // nop                                            // sll r0, r0, 0
-  c->vftoi4(DEST::xyzw, vf1, vf1);                  // vftoi4.xyzw vf1, vf1
+  c->vftoi4_sat(DEST::xyzw, vf1, vf1);              // vftoi4.xyzw vf1, vf1
   // nop                                            // sll r0, r0, 0
   c->vmulq(DEST::xyz, vf2, vf2);                    // vmulq.xyz vf2, vf2, Q
   // nop                                            // sll r0, r0, 0
@@ -2209,7 +2228,7 @@ block_225:
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
-  c->vftoi4(DEST::xyzw, vf2, vf2);                  // vftoi4.xyzw vf2, vf2
+  c->vftoi4_sat(DEST::xyzw, vf2, vf2);              // vftoi4.xyzw vf2, vf2
   // nop                                            // sll r0, r0, 0
   c->vmulq(DEST::xyz, vf3, vf3);                    // vmulq.xyz vf3, vf3, Q
   // nop                                            // sll r0, r0, 0
@@ -2231,7 +2250,7 @@ block_225:
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
-  c->vftoi4(DEST::xyzw, vf3, vf3);                  // vftoi4.xyzw vf3, vf3
+  c->vftoi4_sat(DEST::xyzw, vf3, vf3);              // vftoi4.xyzw vf3, vf3
   // nop                                            // sll r0, r0, 0
   c->vmulq(DEST::xyz, vf4, vf4);                    // vmulq.xyz vf4, vf4, Q
   // nop                                            // sll r0, r0, 0
@@ -2261,7 +2280,7 @@ block_230:
   c->vadd_bc(DEST::x, BC::w, vf23, vf23, vf14);     // vaddw.x vf23, vf23, vf14
 
 block_231:
-  c->vftoi4(DEST::xyzw, vf4, vf4);                  // vftoi4.xyzw vf4, vf4
+  c->vftoi4_sat(DEST::xyzw, vf4, vf4);              // vftoi4.xyzw vf4, vf4
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
   // nop                                            // sll r0, r0, 0
@@ -2739,10 +2758,16 @@ block_59:
 
 block_60:
   c->vsub(DEST::xyzw, vf23, vf23, vf24);            // vsub.xyzw vf23, vf23, vf24
-  c->load_symbol2(v1, cache.video_params);          // lw v1, *video-params*(s7)
-  c->mov64(v1, v1);                                 // or v1, v1, r0
-  c->lqc2(vf1, 16, v1);                             // lqc2 vf1, 16(v1)
-  c->vmul(DEST::x, vf23, vf23, vf1);                // vmul.x vf23, vf23, vf1
+  // pc-hack
+  c->lw(v1, 64, a1);                                // lw v1, 64(a1)
+  if (!(c->gprs[v1].du32[0] & 1 << 6)) {
+    // pc-hack flag
+    c->load_symbol2(v1, cache.video_params);        // lw v1, *video-params*(s7)
+    c->mov64(v1, v1);                               // or v1, v1, r0
+    c->lqc2(vf1, 16, v1);                           // lqc2 vf1, 16(v1)
+    c->vmul(DEST::x, vf23, vf23, vf1);              // vmul.x vf23, vf23, vf1
+  }
+  // pc-hack end
   c->lqc2(vf1, 44, a1);                             // lqc2 vf1, 44(a1)
   c->vmul_bc(DEST::x, BC::w, vf23, vf23, vf1);      // vmulw.x vf23, vf23, vf1
   c->mov128_gpr_vf(v0, vf23);                       // qmfc2.i v0, vf23
@@ -2761,7 +2786,8 @@ void link() {
   cache.font12_table = intern_from_c(-1, 0, "*font12-table*").c();
   cache.font24_table = intern_from_c(-1, 0, "*font24-table*").c();
   cache.video_params = intern_from_c(-1, 0, "*video-params*").c();
-  gLinkedFunctionTable.reg("get-string-length", execute, 512);
+  // gLinkedFunctionTable.reg("get-string-length", execute, 512);
+  gLinkedFunctionTable.reg("get-string-length-asm", execute, 512);
 }
 
 } // namespace get_string_length

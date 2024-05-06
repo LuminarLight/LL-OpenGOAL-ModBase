@@ -5505,6 +5505,14 @@ FormElement* ConditionElement::make_generic(const Env& env,
                                                 casted);
     }
 
+    case IR2_Condition::Kind::LEQ_ZERO_UNSIGNED: {
+      auto casted = make_casts_if_needed(source_forms, types, TypeSpec("uint"), pool, env);
+      auto zero = pool.form<SimpleAtomElement>(SimpleAtom::make_int_constant(0));
+      casted.push_back(zero);
+      return pool.alloc_element<GenericElement>(GenericOperator::make_fixed(FixedOperatorKind::LEQ),
+                                                casted);
+    }
+
     case IR2_Condition::Kind::GEQ_ZERO_SIGNED: {
       return make_geq_zero_signed_check_generic(env, pool, source_forms, types);
     }
@@ -6577,6 +6585,10 @@ bool try_vector_reset_inline(const Env& env,
   bool got_orig = false;
   RegisterAccess orig;
   store = repop_passthrough_arg(store, stack, env, &orig, &got_orig);
+
+  if (!store) {
+    return false;
+  }
 
   // create the actual  form
   Form* new_thing = pool.form<GenericElement>(

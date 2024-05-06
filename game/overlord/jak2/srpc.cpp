@@ -24,8 +24,10 @@ static const char* languages[] = {"ENG", "FRE", "GER", "SPA", "ITA", "JAP", "KOR
 static u32 gInfoEE = 0;
 static u32 IopTicks = 0;
 static SoundIopInfo info;
-static uint8_t gPlayerBuf[0x50 * 128];
-static uint8_t gLoaderBuf[0x50];
+constexpr int kPlayerBufSize = 0x50 * 128;
+static uint8_t gPlayerBuf[kPlayerBufSize];
+constexpr int kLoaderBufSize = 0x50;
+static uint8_t gLoaderBuf[kLoaderBufSize];
 
 void srpc_init_globals() {}
 
@@ -363,6 +365,10 @@ void* RPC_Player(unsigned int /*fno*/, void* data, int size) {
       case Jak2SoundCommand::set_fps: {
         gFPS = cmd->fps.fps;
       } break;
+      case Jak2SoundCommand::cancel_dgo: {
+        // temporary. here just so we don't assert.
+        lg::error("RPC Player dgo cancel command received");
+      } break;
       default:
         ASSERT_MSG(false, fmt::format("Unhandled RPC Player command {}", int(cmd->j2command)));
     }
@@ -575,8 +581,8 @@ u32 Thread_Player() {
   CpuDisableIntr();
   sceSifInitRpc(0);
   sceSifSetRpcQueue(&dq, GetThreadId());
-  sceSifRegisterRpc(&serve, PLAYER_RPC_ID[g_game_version], RPC_Player, gPlayerBuf, nullptr, nullptr,
-                    &dq);
+  sceSifRegisterRpc(&serve, PLAYER_RPC_ID[g_game_version], RPC_Player, gPlayerBuf, kPlayerBufSize,
+                    nullptr, nullptr, &dq);
   CpuEnableIntr();
   sceSifRpcLoop(&dq);
   return 0;
@@ -590,8 +596,8 @@ u32 Thread_Loader() {
   CpuDisableIntr();
   sceSifInitRpc(0);
   sceSifSetRpcQueue(&dq, GetThreadId());
-  sceSifRegisterRpc(&serve, LOADER_RPC_ID[g_game_version], RPC_Loader, gLoaderBuf, nullptr, nullptr,
-                    &dq);
+  sceSifRegisterRpc(&serve, LOADER_RPC_ID[g_game_version], RPC_Loader, gLoaderBuf, kLoaderBufSize,
+                    nullptr, nullptr, &dq);
   CpuEnableIntr();
   sceSifRpcLoop(&dq);
   return 0;
