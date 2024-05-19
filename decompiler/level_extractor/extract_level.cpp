@@ -12,12 +12,14 @@
 #include "decompiler/level_extractor/BspHeader.h"
 #include "decompiler/level_extractor/extract_actors.h"
 #include "decompiler/level_extractor/extract_collide_frags.h"
+#include "decompiler/level_extractor/extract_hfrag.h"
 #include "decompiler/level_extractor/extract_joint_group.h"
 #include "decompiler/level_extractor/extract_merc.h"
 #include "decompiler/level_extractor/extract_shrub.h"
 #include "decompiler/level_extractor/extract_tfrag.h"
 #include "decompiler/level_extractor/extract_tie.h"
 #include "decompiler/level_extractor/fr3_to_gltf.h"
+#include "goalc/build_actor/jak1/build_actor.h"
 
 namespace decompiler {
 
@@ -27,25 +29,9 @@ namespace decompiler {
 std::optional<ObjectFileRecord> get_bsp_file(const std::vector<ObjectFileRecord>& records,
                                              const std::string& dgo_name) {
   std::optional<ObjectFileRecord> result;
-  bool found = false;
-  for (auto& file : records) {
-    if (file.name.length() > 4 && file.name.substr(file.name.length() - 4) == "-vis") {
-      ASSERT(!found);
-      found = true;
-      result = file;
-    }
-  }
-
-  if (!result) {
-    if (str_util::ends_with(dgo_name, ".DGO") || str_util::ends_with(dgo_name, ".CGO")) {
-      auto expected_name = dgo_name.substr(0, dgo_name.length() - 4);
-      for (auto& c : expected_name) {
-        c = tolower(c);
-      }
-      if (!records.empty() && expected_name == records.back().name) {
-        return records.back();
-      }
-    }
+  if (str_util::ends_with(dgo_name, ".DGO")) {
+    // only DGOs are valid levels, and the last file is the bsp file
+    result = records.at(records.size() - 1);
   }
   return result;
 }
@@ -150,9 +136,8 @@ std::vector<level_tools::TextureRemap> extract_tex_remap(const ObjectFileDB& db,
   bool ok = is_valid_bsp(bsp_file.linked_data);
   ASSERT(ok);
 
-  level_tools::DrawStats draw_stats;
   level_tools::BspHeader bsp_header;
-  bsp_header.read_from_file(bsp_file.linked_data, db.dts, &draw_stats, db.version(), true);
+  bsp_header.read_from_file(bsp_file.linked_data, db.dts, db.version(), true);
 
   return bsp_header.texture_remap_table;
 }
@@ -174,10 +159,8 @@ level_tools::BspHeader extract_bsp_from_level(const ObjectFileDB& db,
   bool ok = is_valid_bsp(bsp_file.linked_data);
   ASSERT(ok);
 
-  level_tools::DrawStats draw_stats;
-  // draw_stats.debug_print_dma_data = true;
   level_tools::BspHeader bsp_header;
-  bsp_header.read_from_file(bsp_file.linked_data, db.dts, &draw_stats, db.version());
+  bsp_header.read_from_file(bsp_file.linked_data, db.dts, db.version());
   ASSERT((int)bsp_header.drawable_tree_array.trees.size() == bsp_header.drawable_tree_array.length);
 
   // grrr.....
@@ -219,7 +202,7 @@ level_tools::BspHeader extract_bsp_from_level(const ObjectFileDB& db,
         expected_missing_textures = it->second;
       }
       bool atest_disable_flag = false;
-      if (db.version() == GameVersion::Jak2) {
+      if (db.version() >= GameVersion::Jak2) {
         if (bsp_header.texture_flags[0] & 1) {
           atest_disable_flag = true;
         }
@@ -256,6 +239,9 @@ level_tools::BspHeader extract_bsp_from_level(const ObjectFileDB& db,
     ASSERT(!got_collide);
     extract_collide_frags(bsp_header.collide_hash, all_ties, config,
                           fmt::format("{}-{}-collide", dgo_name, i++), db.dts, level_data);
+  }
+  if (bsp_header.hfrag) {
+    extract_hfrag(bsp_header, tex_db, &level_data);
   }
   level_data.level_name = bsp_header.name;
 
