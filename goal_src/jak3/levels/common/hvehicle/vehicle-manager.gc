@@ -231,6 +231,7 @@
 
 ;; WARN: Return type mismatch process vs process-drawable.
 (defun vehicle-spawn ((arg0 vehicle-type) (arg1 traffic-object-spawn-params))
+  (format #t "~S~%" (type-from-vehicle-type arg0))
   (let ((gp-0 (the-as process #f)))
     (cond
       ((level-get *level* (-> *traffic-info* vehicle-levels arg0))

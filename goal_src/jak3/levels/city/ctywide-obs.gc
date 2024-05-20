@@ -819,7 +819,7 @@
   (set! (-> arg0 proc) #f)
   (the-as vehicle (cond
                     ((= (-> arg0 object-type) (traffic-type bike-d))
-                     (let ((v0-0 (the-as object (vehicle-spawn (vehicle-type h-bike-d) arg0))))
+                     (let ((v0-0 (the-as object (vehicle-spawn (vehicle-type h-hellcat) arg0))))
                        (if (the-as process-drawable v0-0)
                            (logior! (-> (the-as vehicle v0-0) v-flags) (vehicle-flag traffic-managed))
                            )
