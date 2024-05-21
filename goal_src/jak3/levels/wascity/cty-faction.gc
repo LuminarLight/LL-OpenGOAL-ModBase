@@ -283,7 +283,7 @@
     (('ctypesa)
      0
      )
-    (('ctycara 'ctycarb 'ctycarc 'ctypepa)
+    (('ctycara 'ctycarb 'ctypepa)
      1
      )
     (('ctypesc)
@@ -307,7 +307,7 @@
 
 (defmethod cty-faction-manager-method-18 ((this cty-faction-manager) (arg0 symbol))
   (case arg0
-    (('ctycara 'ctycarb 'ctycarc 'ctypesa 'ctypepa)
+    (('ctycara 'ctycarb 'ctypesa 'ctypepa)
      0
      )
     (('ctypepc 'ctypesc)

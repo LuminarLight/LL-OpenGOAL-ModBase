@@ -278,6 +278,9 @@ void extract_common(const ObjectFileDB& db,
   add_all_textures_from_level(tfrag_level, "ARTSPOOL", tex_db);
   extract_art_groups_from_level(db, tex_db, {}, "ARTSPOOL", tfrag_level, art_group_data);
 
+  //add_all_textures_from_level(tfrag_level, "CTYCARC.DGO", tex_db);
+  //extract_art_groups_from_level(db, tex_db, {}, "CTYCARC.DGO", tfrag_level, art_group_data);
+
   std::set<std::string> textures_we_have;
 
   // put _all_ index textures in common.
@@ -328,6 +331,25 @@ void extract_common(const ObjectFileDB& db,
   }
 }
 
+std::vector<decompiler::ObjectFileRecord> find_art_groups(
+    std::vector<std::string>& processed_ags,
+    const std::vector<std::string>& custom_level_ag,
+    const std::vector<decompiler::ObjectFileRecord>& dgo_files) {
+  std::vector<decompiler::ObjectFileRecord> art_groups;
+  for (const auto& file : dgo_files) {
+    // skip any art groups we already added from other dgos
+    if (std::find(processed_ags.begin(), processed_ags.end(), file.name) != processed_ags.end()) {
+      continue;
+    }
+    if (std::find(custom_level_ag.begin(), custom_level_ag.end(), file.name) !=
+        custom_level_ag.end()) {
+      art_groups.push_back(file);
+      processed_ags.push_back(file.name);
+    }
+  }
+  return art_groups;
+}
+
 void extract_from_level(const ObjectFileDB& db,
                         const TextureDB& tex_db,
                         const std::string& dgo_name,
@@ -342,10 +364,45 @@ void extract_from_level(const ObjectFileDB& db,
   std::map<std::string, level_tools::ArtData> art_group_data;
   add_all_textures_from_level(level_data, dgo_name, tex_db);
 
+  //if (dgo_name == "CTYCARA.DGO") {
+  //  add_all_textures_from_level(level_data, "CTYCARC.DGO", tex_db);
+  //}
+
   // the bsp header file data
   auto bsp_header = extract_bsp_from_level(db, tex_db, dgo_name, config, level_data);
   extract_art_groups_from_level(db, tex_db, bsp_header.texture_remap_table, dgo_name, level_data,
                                 art_group_data);
+
+  //if (dgo_name == "CTYCARA.DGO") {
+  //  const std::string local_dgo_name = "CTYCARC.DGO";
+  //  // extract_art_groups_from_level(db, tex_db, {}, "CTYCARC.DGO", level_data, art_group_data);
+  //  /*extract_art_groups_from_level(db, tex_db,
+  //                                extract_bsp_from_level(db, tex_db, local_dgo_name, config, level_data).texture_remap_table,
+  //                                local_dgo_name, level_data, art_group_data);*/
+
+  //  extract_art_groups_from_level(
+  //      db, tex_db, bsp_header.texture_remap_table,
+  //      local_dgo_name, level_data, art_group_data);
+  //}
+
+  if (dgo_name == "CWI.DGO") {
+    for (auto& dgo : config.dgo_names) {
+      std::vector<std::string> processed_art_groups;
+      // remove "DGO/" prefix
+      const auto& dgo_name = dgo.substr(4);
+      const auto& files = db.obj_files_by_dgo.at(dgo_name);
+      auto art_groups = find_art_groups(processed_art_groups, {"hellcat-ag"}, files);
+      auto tex_remap = decompiler::extract_tex_remap(db, dgo_name);
+      for (const auto& ag : art_groups) {
+        if (ag.name.length() > 3 && !ag.name.compare(ag.name.length() - 3, 3, "-ag")) {
+          const auto& ag_file = db.lookup_record(ag);
+          lg::print("custom level: extracting art group {}\n", ag_file.name_in_dgo);
+          decompiler::extract_merc(ag_file, tex_db, db.dts, tex_remap, level_data, false,
+                                   db.version());
+        }
+      }
+    }
+  }
 
   Serializer ser;
   level_data.serialize(ser);

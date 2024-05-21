@@ -600,7 +600,7 @@
                     )
                   :borrow (new 'static 'level-borrow-info
                     :alias #f
-                    :borrow-size (new 'static 'array uint16 5 #x1a4 #x1a4 #x1a4 #x30c #x32a)
+                    :borrow-size (new 'static 'array uint16 5 #x600 #x600 #x600 #x600 #x600)
                     :borrow-info (new 'static 'array object 5 #f #f #f #f #f)
                     )
                   :bottom-height (meters -15)

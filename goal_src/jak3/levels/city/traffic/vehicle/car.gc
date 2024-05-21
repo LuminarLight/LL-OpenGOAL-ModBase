@@ -1259,7 +1259,7 @@
     :flags #x4c
     :object-type (traffic-type guard-car)
     :guard-type #x5
-    :vehicle-type (vehicle-type-u8 vt27)
+    :vehicle-type (vehicle-type-u8 h-hellcat) ;; (vehicle-type-u8 vt27)
     :transmission (new 'static 'vehicle-transmission-info :gear-count 1)
     :handling (new 'static 'vehicle-handling-info
       :max-engine-thrust (meters 30)
@@ -1974,11 +1974,44 @@
   )
 
 
+(define *hellcat-front-turret-control-info* (new 'static 'turret-control-info
+                                              :joint-index 4
+                                              :barrel-count 1
+                                              :shot-speed 819200.0
+                                              :attack-range 286720.0
+                                              :damage 2.0
+                                              :vehicle-damage-factor 1.0
+                                              :vehicle-impulse-factor 1.0
+                                              :rot-min (new 'static 'array float 2 -16384.0 -21845.334)
+                                              :rot-max (new 'static 'array float 2 0.0 21845.334)
+                                              :local-pos (new 'static 'vector :y -1433.6 :z 4096.0 :w 1.0)
+                                              :local-dir (new 'static 'vector :z 1.0 :w 1.0)
+                                              :barrel-array (new 'static 'inline-array turret-barrel-info 4
+                                                (new 'static 'turret-barrel-info
+                                                  :local-pos (new 'static 'vector :y -1433.6 :z 4096.0 :w 1.0)
+                                                  :local-dir (new 'static 'vector :z 1.0 :w 1.0)
+                                                  )
+                                                (new 'static 'turret-barrel-info)
+                                                (new 'static 'turret-barrel-info)
+                                                (new 'static 'turret-barrel-info)
+                                                )
+                                              )
+        )
+
+(set! (-> *hellcat-front-turret-control-info* shot-type) guard-shot)
+
 (deftype h-hellcat (h-car-base)
-  ((turret-jm  joint-mod-rotate-local)
+  ((turret-jm joint-mod-rotate-local)
+   (turret turret-control :inline)
    )
   )
 
+(defmethod relocate ((this h-hellcat) (arg0 int))
+  (if (nonzero? (-> this turret-jm))
+      (&+! (-> this turret-jm) arg0)
+      )
+  (call-parent-method this arg0)
+  )
 
 ;; (defmethod relocate ((this h-hellcat) (arg0 int))
 ;;   (if (nonzero? (-> this turret-jm))
@@ -1986,6 +2019,28 @@
 ;;       )
 ;;   (call-parent-method this arg0)
 ;;   )
+
+(defmethod vehicle-method-94 ((this h-hellcat))
+  (rlet ((acc :class vf)
+         (vf0 :class vf)
+         (vf4 :class vf)
+         (vf5 :class vf)
+         (vf6 :class vf)
+         (vf7 :class vf)
+         )
+    (init-vf0-vector)
+    (when (cpad-hold? 0 r1)
+      (when (time-elapsed? (-> this turret shoot-time) (seconds 0.35))
+        (set! (-> this turret owner-handle) (process->handle *target*))
+        (turret-control-method-17 (-> this turret) this)
+        (set! (-> this turret owner-handle) (the-as handle #f))
+        )
+      )
+    ((method-of-type vehicle vehicle-method-94) this)
+    0
+    (none)
+    )
+  )
 
 (defmethod vehicle-method-133 ((this h-hellcat) (arg0 traffic-object-spawn-params))
   (vehicle-rider-spawn this crimson-guard-rider arg0)
@@ -2056,7 +2111,7 @@
   )
 
 ;; (defmethod update-joint-mods ((this h-hellcat))
-;;   (update-joint-mod (-> this turret) (-> this turret-jm))
+;;   (update-joint-mod (-> this turret-control) (-> this turret-jm))
 ;;   0
 ;;   (none)
 ;;   )
@@ -2068,7 +2123,7 @@
     (the-as pair 0)
     )
   (alloc-rbody-control! this *h-hellcat-constants*)
-  ;; (set-info (-> this turret-control) *hellcat-front-turret-control-info*)
+  (set-info (-> this turret) *hellcat-front-turret-control-info*)
   ;; (set! (-> this turret-jm) (new 'process 'joint-mod-rotate-local this (-> this turret info joint-index) #t))
   0
   (none)

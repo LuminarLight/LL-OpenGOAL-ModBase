@@ -10,7 +10,7 @@
 (define-extern city-sound-expand-want-list (function none))
 
 (defglobalconstant NUM_LEVEL_PAGES 146)
-(defglobalconstant LEVEL_PAGE_SIZE_KB 126) ;; original value
+(defglobalconstant LEVEL_PAGE_SIZE_KB 252) ;; original value
 (defglobalconstant LEVEL_PAGE_SIZE (* LEVEL_PAGE_SIZE_KB 1024)) ;; original value
 
 (defglobalconstant LEVEL_HEAP_SIZE (* NUM_LEVEL_PAGES LEVEL_PAGE_SIZE))

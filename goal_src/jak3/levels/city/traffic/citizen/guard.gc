@@ -745,9 +745,10 @@
         (crimson-guard-method-267 this (the-as guard-type a1-1) (= (-> arg0 behavior) 11))
         )
     )
-  (when #f
+  (when #t
     (let ((s4-0 (new 'stack-no-clear 'shield-sphere-spawn-params)))
       (set! (-> s4-0 owner) (process->handle this))
+      (set! (-> s4-0 track-joint) 27)
       (set! (-> s4-0 sphere-size) 3.4)
       (set! (-> s4-0 shield-strength) 3)
       (set! (-> s4-0 shield-type) (shield-type shield-type-0))

@@ -949,7 +949,7 @@
           (vector-float*! s4-0 (-> s2-3 force) (-> s2-3 velocity z))
           (rigid-body-control-method-22 (-> this rbody) s3-0 s4-0)
           )
-        (when #f
+        (when #t ;; Allows you to roll with right stick
           (let ((f0-29 (analog-input (the-as int (-> *cpad-list* cpads 0 rightx)) 128.0 48.0 110.0 1.0)))
             (set! (-> this rolling) #f)
             (when (!= f0-29 0.0)

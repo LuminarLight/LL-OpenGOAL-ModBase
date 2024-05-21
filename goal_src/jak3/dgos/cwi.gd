@@ -96,6 +96,7 @@
   "fac-lorez-ag.go"
   "vehicle-explosion-ag.go"
   "newbike-ag.go"
+  "hellcat-ag.go"
   "ctycrate-ag.go"
   "eco-canister-ag.go"
   "searchlight-ag.go"
