@@ -9850,10 +9850,13 @@
    (death-pos             vector-array     :offset-assert 312)
    (dummy                 basic     :offset-assert 316)
    (auto-save-count       int32     :offset-assert 320)
+   (total-nb-of-buzzers int32)
+   (total-nb-of-orbs int32)
+   (total-nb-of-fuel-cells int32)
    )
   :method-count-assert 29
-  :size-assert         #x144
-  :flag-assert         #x1d00000144
+  :size-assert         #x150
+  :flag-assert         #x1d00000150
   ;; field dummy is a basic loaded with a signed load
   (:methods
     (initialize! (_type_ symbol game-save string) _type_) ;; 9
