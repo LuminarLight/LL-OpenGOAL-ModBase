@@ -1125,10 +1125,6 @@ void init_common_pc_port_functions(
 
   make_func_symbol_func("main-music-volume", (void*)changeMainMusicVolume);
 
-  // TFL note: added
-  make_func_symbol_func("play-tfl-hint", (void*)play_tfl_hint);
-  make_func_symbol_func("play-tfl-music", (void*)play_tfl_music);
-
   // discord rich presence
   make_func_symbol_func("pc-discord-rpc-set", (void*)set_discord_rpc);
 
