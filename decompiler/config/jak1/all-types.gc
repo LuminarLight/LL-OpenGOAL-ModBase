@@ -16253,10 +16253,11 @@
    (poly-count          int32           :offset-assert 192)
    (poly                (inline-array nav-poly)          :offset-assert 196)
    (route               (inline-array vector4ub)          :offset-assert 200) ;; this is a guess, it's probably wrong -- but its something with a uint8 at offset 0
+   (custom-hacky? symbol)
    )
   :method-count-assert 30
-  :size-assert         #xcc
-  :flag-assert         #x1e000000cc
+  :size-assert         #xd0
+  :flag-assert         #x1e000000d0
   (:methods
     (tri-centroid-world (_type_ nav-poly vector) vector) ;; 9 ;; finds the centroid of the given triangle, in the "world" coordinate system.
     (tri-centroid-local (_type_ nav-poly vector) vector) ;; 10 ;; finds the centroid of the given triangle, in the local nav-mesh coordinate system.
