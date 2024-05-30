@@ -14446,21 +14446,21 @@
   )
 
 (deftype entity-ambient-data (structure)
-  ((user-object object 3  :score -100 :offset-assert 0)
-   (function    (function drawable-ambient vector none)      :offset-assert 12)
+  ((user-object object 4  :score -100 :offset-assert 0)
+   (function    (function drawable-ambient vector none)      :offset-assert 16)
    (quad        uint128    :offset 0)
-   (user-uint64 uint64 1  :offset 0)
-   (user-float  float 3  :offset 0)
-   (user-int32  int32 3  :offset 0)
-   (user-uint32 uint32 3  :offset 0)
-   (user-int16  int16 6  :offset 0)
-   (user-uint16 uint16 6  :offset 0)
-   (user-int8   int8 12 :offset 0)
-   (user-uint8  uint8 12 :offset 0)
+   (user-uint64 uint64 2  :offset 0)
+   (user-float  float 4  :offset 0)
+   (user-int32  int32 4  :offset 0)
+   (user-uint32 uint32 4  :offset 0)
+   (user-int16  int16 8  :offset 0)
+   (user-uint16 uint16 8  :offset 0)
+   (user-int8   int8 16 :offset 0)
+   (user-uint8  uint8 16 :offset 0)
    )
   :method-count-assert 9
-  :size-assert         #x10
-  :flag-assert         #x900000010
+  :size-assert         #x14
+  :flag-assert         #x900000014
   )
 
 (deftype entity-ambient-data-array (inline-array-class)
