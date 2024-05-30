@@ -5634,7 +5634,7 @@
    )
   :method-count-assert 9
   :size-assert         #x7c
-  :flag-assert         #x900000074
+  :flag-assert         #x90000007c
   )
 
 (declare-type drawable basic)
