@@ -6329,7 +6329,8 @@
    (ambient-volume float :offset-assert 140)
    (ambient-volume-movie float :offset-assert 144)
    (dialog-volume-hint float :offset-assert 148)
-   (dummy uint32 11 :offset-assert 152)
+   (custom-music symbol :offset-assert 152)
+   (dummy uint32 10 :offset-assert 156)
    )
   :method-count-assert 10
   :size-assert         #xc4
