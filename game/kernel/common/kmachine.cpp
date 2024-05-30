@@ -7,8 +7,6 @@
 #include <thread>
 
 #define MINIAUDIO_IMPLEMENTATION
-#include "third-party/miniaudio.h"
-
 #include "common/global_profiler/GlobalProfiler.h"
 #include "common/log/log.h"
 #include "common/symbols.h"
@@ -30,6 +28,8 @@
 #include "game/sce/libpad.h"
 #include "game/sce/libscf.h"
 #include "game/sce/sif_ee.h"
+
+#include "third-party/miniaudio.h"
 
 /*!
  * Where does OVERLORD load its data from?
