@@ -187,8 +187,6 @@ std::string get_parent_directory(const std::string& path) {
   return parent_directory;
 }
 
-
-
 std::optional<std::string> try_get_project_path_from_path(const std::string& path) {
   // std::string::size_type pos =
   //     std::string(path).rfind("jak-project");  // Strip file path down to /jak-project/ directory
@@ -204,7 +202,7 @@ std::optional<std::string> try_get_project_path_from_path(const std::string& pat
       lg::info("Project path found - {}", current_path.string());
       return current_path.string();
     }
-    if (!current_path.has_parent_path()){
+    if (!current_path.has_parent_path()) {
       lg::info("No parent folder found");
       return {};
     }
