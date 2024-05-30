@@ -289,7 +289,7 @@ add_subdirectory(sound)
 # we build the runtime as a static library.
 add_library(runtime STATIC ${RUNTIME_SOURCE} "../third-party/glad/src/glad.c")
 
-target_link_libraries(runtime common fmt SDL2::SDL2 imgui discord-rpc sound stb_image libco libcurl SFML::Audio)
+target_link_libraries(runtime common fmt SDL2::SDL2 imgui discord-rpc sound stb_image libco libcurl)
 if(WIN32)
     target_link_libraries(runtime mman)
 else()
@@ -298,13 +298,3 @@ endif()
 
 add_executable(gk main.cpp)
 target_link_libraries(gk runtime)
-
-# Copy the SFML dll files because it is weird.
-
-if(EXISTS "${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-audio-3.dll")
-    file(COPY_FILE ${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-audio-3.dll ${CMAKE_BINARY_DIR}/bin/sfml-audio-3.dll)
-endif()
-
-if(EXISTS "${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-system-3.dll")
-    file(COPY_FILE ${CMAKE_BINARY_DIR}/third-party/SFML/bin/sfml-system-3.dll ${CMAKE_BINARY_DIR}/bin/sfml-system-3.dll)
-endif()
