@@ -5629,6 +5629,8 @@
    (prev-level        basic     :offset-assert 104)
    (next-level        basic     :offset-assert 108)
    (wait-for-load     symbol    :offset-assert 112)
+   (custom-level?      symbol)
+   (custom-music       symbol)
    )
   :method-count-assert 9
   :size-assert         #x74
