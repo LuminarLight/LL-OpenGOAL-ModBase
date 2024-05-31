@@ -19144,15 +19144,16 @@
    (cmd-fwd    load-boundary-crossing-command :inline :offset-assert 24)
    (cmd-bwd    load-boundary-crossing-command :inline :offset-assert 36)
    (rejector   vector                         :inline :offset-assert 48)
-   (data       lbvtx                        1    :inline   :offset-assert 64)
-   (data2       lbvtx                        :dynamic    :inline   :offset 64)
+   (tasks (array string))
+   (data       lbvtx                        1    :inline   :offset-assert 80)
+   (data2       lbvtx                        :dynamic    :inline   :offset 80)
    )
   (:methods
     (new (symbol type int symbol symbol) _type_) ;; 0
     )
   :method-count-assert 9
-  :size-assert         #x50
-  :flag-assert         #x900000050
+  :size-assert         #x60
+  :flag-assert         #x900000060
   )
 
 ;; - Unknowns
