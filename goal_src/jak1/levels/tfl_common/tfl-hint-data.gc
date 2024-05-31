@@ -68,7 +68,7 @@ examples:
   )
 
 (define *tfl-hints* (new 'static 'boxed-array :type tfl-hint-data
-                            (static-hint-data
+                            #|(static-hint-data
                               :file-name "crystalc-tfl-hint-01-daxPortal.wav"
                               :text-id (text-id crystalc-tfl-hint-01-daxPortal)
                               :force-playback? #t
@@ -196,6 +196,6 @@ examples:
                               :text-id (text-id energy-bay-tfl-hint-04-SamosCrystal)
                               :voicebox? #t
                               :force-playback? #t
-                              )
+                              )|#
                             )
   )
