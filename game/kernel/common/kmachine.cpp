@@ -297,7 +297,7 @@ u32 play_tfl_hint(u32 file_name, u32 volume, u32 interrupt) {
 
 ma_sound* g_tfl_music;
 
-ma_uint64 fade_length = 1000; // TODO make this get from GOAL side.
+ma_uint64 fade_length = 1000;  // TODO make this get from GOAL side.
 
 void stop_tfl_music(bool force) {
   if (g_tfl_music && ma_sound_is_playing(g_tfl_music)) {
@@ -324,7 +324,7 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
     return offset_of_s7();
   }*/
 
-  //stop_tfl_music(true);
+  // stop_tfl_music(true);
 
   std::thread music_thread([=]() {
     auto name_str = std::string(Ptr<String>(file_name)->data());
@@ -362,7 +362,7 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
     ma_sound_start(g_tfl_music);
     jak1::intern_from_c("*tfl-music-playing?*")->value =
         offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
-    
+
     auto paused_func = [](ma_sound* music) {
       while (!ma_sound_is_playing(music)) {
         auto pause = jak1::call_goal_function_by_name("paused?");
@@ -391,9 +391,9 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
         auto stop = jak1::intern_from_c("*tfl-music-stop*")->value;
         if (stop == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
           jak1::intern_from_c("*tfl-music-stop*")->value = offset_of_s7();
-          //stop_tfl_music(false);
-          // delete g_tfl_music;
-          //std::terminate();
+          // stop_tfl_music(false);
+          //  delete g_tfl_music;
+          // std::terminate();
 
           stop_tfl_music(false);
           ma_sound_uninit(&sound);
