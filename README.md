@@ -103,7 +103,7 @@ I am happy if anyone finds this useful. But I have a request: If you learn more 
 
 - Implement flavor/variant support for custom music.
 - Make the TFL hints system work again.
-- Clean up GitHub Actions
+- Clean up GitHub Actions.
 - Understand more about the navmesh system (node, route).
 - Show how to add new `battle` actors, also show the part that needs to be done through code. I have already touched the battle system in the past. I should clear things up and implement an example.
 - Rewrite the warp gate system, to make it more extendable. I imagine a lot of custom level mods will want to use the warp gate. But its code is ugly and not easy to extend.
