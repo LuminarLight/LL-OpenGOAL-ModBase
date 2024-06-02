@@ -297,7 +297,7 @@ u32 play_tfl_hint(u32 file_name, u32 volume, u32 interrupt) {
 
 ma_sound* g_tfl_music;
 
-ma_uint64 fade_length = 1000;
+ma_uint64 fade_length = 1000; // TODO make this get from GOAL side.
 
 void stop_tfl_music(bool force) {
   if (g_tfl_music && ma_sound_is_playing(g_tfl_music)) {
