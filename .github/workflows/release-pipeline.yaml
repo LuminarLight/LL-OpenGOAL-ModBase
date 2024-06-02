@@ -1,9 +1,13 @@
 name: 🏭 Release Pipeline
 
 on:
-  push:
-    tags:
-      - v*
+  workflow_run:
+    workflows: ["draft-new-release"]
+    types:
+      - completed
+  # push:
+  #   tags:
+  #     - v*
 
 permissions:
   contents: write
