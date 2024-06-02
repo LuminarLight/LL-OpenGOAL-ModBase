@@ -13,7 +13,8 @@ on:
           - minor
           - major
 
-permissions: write-all
+permissions:
+  contents: write
 
 jobs:
   cut-release:
