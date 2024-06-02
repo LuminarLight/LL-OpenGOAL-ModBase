@@ -5,14 +5,25 @@ on:
     workflows: ["🏭 Draft Release"]
     types:
       - completed
-  push:
-    tags:
-      - v*
 
 permissions:
   contents: write
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.read.outputs.tag }}
+    steps:
+      - name: Download tag
+        uses: actions/download-artifact@v2
+        with:
+          name: tag
+
+      - name: Read tag
+        id: read
+        run: echo "::set-output name=tag::refs/tags/$(cat tag.txt)"
+
   # Windows
   build_windows_clang:
     name: "🖥️ Windows"
@@ -46,6 +57,7 @@ jobs:
   # Upload the Artifacts
   upload_artifacts:
     needs:
+      - setup
       - build_windows_clang
       - build_linux_clang
       # - build_macos_intel
@@ -70,7 +82,7 @@ jobs:
           mkdir -p ./ci-artifacts/linux
           ./.github/scripts/releases/extract_build_unix.sh ./ci-artifacts/linux ./ci-artifacts/opengoal-linux-static ./
           pushd ci-artifacts/linux
-          TAG_VAL=$(echo ${{ github.REF }} | awk -F'refs/tags/' '{print $2}')
+          TAG_VAL=$(echo ${{ needs.setup.outputs.tag }} | awk -F'refs/tags/' '{print $2}')
           tar czf ../final/opengoal-linux-${TAG_VAL}.tar.gz .
           popd
           chmod +x ./ci-artifacts/opengoal-linux-static/lsp/lsp
@@ -80,7 +92,7 @@ jobs:
         run: |
           mkdir -p ./ci-artifacts/windows
           ./.github/scripts/releases/extract_build_windows.sh ./ci-artifacts/windows ./ci-artifacts/opengoal-windows-static ./
-          TAG_VAL=$(echo ${{ github.REF }} | awk -F'refs/tags/' '{print $2}')
+          TAG_VAL=$(echo ${{ needs.setup.outputs.tag }} | awk -F'refs/tags/' '{print $2}')
           7z a -tzip ./ci-artifacts/final/opengoal-windows-${TAG_VAL}.zip ./ci-artifacts/windows/*
           cp ./ci-artifacts/opengoal-windows-static/lsp.exe ./ci-artifacts/final/opengoal-lsp-windows-${TAG_VAL}.exe
 
@@ -89,7 +101,7 @@ jobs:
       #     mkdir -p ./ci-artifacts/macos
       #     ./.github/scripts/releases/extract_build_unix.sh ./ci-artifacts/macos ./ci-artifacts/opengoal-macos-static ./
       #     pushd ci-artifacts/macos
-      #     TAG_VAL=$(echo ${{ github.REF }} | awk -F'refs/tags/' '{print $2}')
+      #     TAG_VAL=$(echo ${{ needs.setup.outputs.tag }} | awk -F'refs/tags/' '{print $2}')
       #     tar czf ../final/opengoal-macos-intel-${TAG_VAL}.tar.gz .
       #     popd
       #     chmod +x ./ci-artifacts/opengoal-macos-static/lsp/lsp
@@ -99,12 +111,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_VAL=$(echo ${{ github.REF }} | awk -F'refs/tags/' '{print $2}')
+          TAG_VAL=$(echo ${{ needs.setup.outputs.tag }} | awk -F'refs/tags/' '{print $2}')
           gh release upload "${TAG_VAL}" ${{ github.WORKSPACE }}/ci-artifacts/final/* --repo ${{ github.repository }} --clobber
 
       - name: Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_VAL=$(echo ${{ github.REF }} | awk -F'refs/tags/' '{print $2}')
+          TAG_VAL=$(echo ${{ needs.setup.outputs.tag }} | awk -F'refs/tags/' '{print $2}')
           gh release edit ${TAG_VAL} --draft=false --repo ${{ github.repository }}
