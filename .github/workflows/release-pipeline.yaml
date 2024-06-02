@@ -15,6 +15,9 @@ jobs:
     outputs:
       tag: ${{ steps.read.outputs.tag }}
     steps:
+      - name: Wait for artifact
+        run: sleep 60
+        
       - name: Download tag
         uses: actions/download-artifact@v2
         with:
