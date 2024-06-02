@@ -2,7 +2,7 @@ name: 🏭 Release Pipeline
 
 on:
   workflow_run:
-    workflows: ["draft-new-release"]
+    workflows: ["🏭 Draft Release"]
     types:
       - completed
   # push:
