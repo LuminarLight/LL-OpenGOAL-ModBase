@@ -5629,10 +5629,12 @@
    (prev-level        basic     :offset-assert 104)
    (next-level        basic     :offset-assert 108)
    (wait-for-load     symbol    :offset-assert 112)
+   (custom-level?      symbol)
+   (custom-music       symbol)
    )
   :method-count-assert 9
-  :size-assert         #x74
-  :flag-assert         #x900000074
+  :size-assert         #x7c
+  :flag-assert         #x90000007c
   )
 
 (declare-type drawable basic)
@@ -6327,7 +6329,8 @@
    (ambient-volume float :offset-assert 140)
    (ambient-volume-movie float :offset-assert 144)
    (dialog-volume-hint float :offset-assert 148)
-   (dummy uint32 11 :offset-assert 152)
+   (custom-music symbol :offset-assert 152)
+   (dummy uint32 10 :offset-assert 156)
    )
   :method-count-assert 10
   :size-assert         #xc4
@@ -9847,10 +9850,13 @@
    (death-pos             vector-array     :offset-assert 312)
    (dummy                 basic     :offset-assert 316)
    (auto-save-count       int32     :offset-assert 320)
+   (total-nb-of-buzzers int32)
+   (total-nb-of-orbs int32)
+   (total-nb-of-fuel-cells int32)
    )
   :method-count-assert 29
-  :size-assert         #x144
-  :flag-assert         #x1d00000144
+  :size-assert         #x150
+  :flag-assert         #x1d00000150
   ;; field dummy is a basic loaded with a signed load
   (:methods
     (initialize! (_type_ symbol game-save string) _type_) ;; 9
@@ -14440,21 +14446,21 @@
   )
 
 (deftype entity-ambient-data (structure)
-  ((user-object object 3  :score -100 :offset-assert 0)
-   (function    (function drawable-ambient vector none)      :offset-assert 12)
+  ((user-object object 4  :score -100 :offset-assert 0)
+   (function    (function drawable-ambient vector none)      :offset-assert 16)
    (quad        uint128    :offset 0)
-   (user-uint64 uint64 1  :offset 0)
-   (user-float  float 3  :offset 0)
-   (user-int32  int32 3  :offset 0)
-   (user-uint32 uint32 3  :offset 0)
-   (user-int16  int16 6  :offset 0)
-   (user-uint16 uint16 6  :offset 0)
-   (user-int8   int8 12 :offset 0)
-   (user-uint8  uint8 12 :offset 0)
+   (user-uint64 uint64 2  :offset 0)
+   (user-float  float 4  :offset 0)
+   (user-int32  int32 4  :offset 0)
+   (user-uint32 uint32 4  :offset 0)
+   (user-int16  int16 8  :offset 0)
+   (user-uint16 uint16 8  :offset 0)
+   (user-int8   int8 16 :offset 0)
+   (user-uint8  uint8 16 :offset 0)
    )
   :method-count-assert 9
-  :size-assert         #x10
-  :flag-assert         #x900000010
+  :size-assert         #x14
+  :flag-assert         #x900000014
   )
 
 (deftype entity-ambient-data-array (inline-array-class)
@@ -16247,10 +16253,11 @@
    (poly-count          int32           :offset-assert 192)
    (poly                (inline-array nav-poly)          :offset-assert 196)
    (route               (inline-array vector4ub)          :offset-assert 200) ;; this is a guess, it's probably wrong -- but its something with a uint8 at offset 0
+   (custom-hacky? symbol)
    )
   :method-count-assert 30
-  :size-assert         #xcc
-  :flag-assert         #x1e000000cc
+  :size-assert         #xd0
+  :flag-assert         #x1e000000d0
   (:methods
     (tri-centroid-world (_type_ nav-poly vector) vector) ;; 9 ;; finds the centroid of the given triangle, in the "world" coordinate system.
     (tri-centroid-local (_type_ nav-poly vector) vector) ;; 10 ;; finds the centroid of the given triangle, in the local nav-mesh coordinate system.
@@ -19137,15 +19144,16 @@
    (cmd-fwd    load-boundary-crossing-command :inline :offset-assert 24)
    (cmd-bwd    load-boundary-crossing-command :inline :offset-assert 36)
    (rejector   vector                         :inline :offset-assert 48)
-   (data       lbvtx                        1    :inline   :offset-assert 64)
-   (data2       lbvtx                        :dynamic    :inline   :offset 64)
+   (tasks (array string))
+   (data       lbvtx                        1    :inline   :offset-assert 80)
+   (data2       lbvtx                        :dynamic    :inline   :offset 80)
    )
   (:methods
     (new (symbol type int symbol symbol) _type_) ;; 0
     )
   :method-count-assert 9
-  :size-assert         #x50
-  :flag-assert         #x900000050
+  :size-assert         #x60
+  :flag-assert         #x900000060
   )
 
 ;; - Unknowns

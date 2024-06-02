@@ -6,6 +6,7 @@
 #include <random>
 #include <thread>
 
+#define MINIAUDIO_IMPLEMENTATION
 #include "common/global_profiler/GlobalProfiler.h"
 #include "common/log/log.h"
 #include "common/symbols.h"
@@ -28,8 +29,8 @@
 #include "game/sce/libpad.h"
 #include "game/sce/libscf.h"
 #include "game/sce/sif_ee.h"
-#include <SFML/Audio.hpp>
-#include <SFML/Audio/Music.hpp>
+
+#include "third-party/miniaudio.h"
 
 /*!
  * Where does OVERLORD load its data from?
@@ -51,6 +52,10 @@ u32 vblank_interrupt_handler = 0;
 
 Timer ee_clock_timer;
 
+ma_engine maEngine;
+std::map<std::string, ma_sound> maSoundMap;
+ma_sound* mainMusicSound;
+
 void kmachine_init_globals_common() {
   memset(pad_dma_buf, 0, sizeof(pad_dma_buf));
   isodrv = fakeiso;  // changed. fakeiso is the only one that works in opengoal.
@@ -59,6 +64,8 @@ void kmachine_init_globals_common() {
   vif1_interrupt_handler = 0;
   vblank_interrupt_handler = 0;
   ee_clock_timer = Timer();
+
+  ma_engine_init(NULL, &maEngine);
 }
 
 /*!
@@ -111,69 +118,83 @@ u64 CPadOpen(u64 cpad_info, s32 pad_number) {
   return cpad_info;
 }
 
-// Define a vector to store references to the active music instances.
-std::vector<std::pair<sf::Music*, std::string>> activeMusics;
-
-// Index to store the main music in the vector.
-const size_t MAIN_MUSIC_INDEX = 0;
-
 // Function to stop all currently playing sounds.
 void stopAllSounds() {
-  for (auto& pair : activeMusics) {
-    pair.first->stop();
+  for (auto& pair : maSoundMap) {
+    ma_sound_stop(&pair.second);
   }
-  activeMusics.clear();
+  maSoundMap.clear();
 }
 
 // Function to get the names of currently playing files.
 std::vector<std::string> getPlayingFileNames() {
   std::vector<std::string> playingFileNames;
-  for (const auto& pair : activeMusics) {
-    playingFileNames.push_back(pair.second);
+  for (const auto& pair : maSoundMap) {
+    playingFileNames.push_back(pair.first);
   }
   return playingFileNames;
 }
 
 std::mutex activeMusicsMutex;  // Mutex to synchronize access to activeMusics
 
-void playMP3(u32 filePathu32, u32 volume) {
+// Declare a mutex for synchronizing access to mainMusicInstance
+std::mutex mainMusicMutex;
+
+void playMP3_internal(u32 filePathu32, u32 volume, bool isMainMusic) {
   std::thread thread([=]() {
     std::string filePath = Ptr<String>(filePathu32).c()->data();
-    std::cout << "Playing MP3: " << filePath << std::endl;
+    std::cout << "Playing file: " << filePath << std::endl;
 
-    sf::Music* music = new sf::Music;
-    if (!music->openFromFile(filePath)) {
+    ma_result result;
+    ma_sound sound;
+
+    result = ma_sound_init_from_file(&maEngine, filePath.c_str(), 0, NULL, NULL, &sound);
+
+    if (result != MA_SUCCESS) {
       std::cout << "Failed to load: " << filePath << std::endl;
-      delete music;
       return;
     }
-    music->setVolume(volume);
-    music->play();
+
+    ma_sound_set_volume(&sound, ((float)volume) / 100.0);
+
+    if (isMainMusic) {
+      ma_sound_set_looping(&sound, MA_TRUE);
+      mainMusicMutex.lock();
+      mainMusicSound = &sound;
+      mainMusicMutex.unlock();
+    }
+
+    ma_sound_start(&sound);
 
     {
       std::lock_guard<std::mutex> lock(activeMusicsMutex);
-      activeMusics.push_back(std::make_pair(music, filePath));
+      maSoundMap.insert(std::make_pair(filePath, sound));
     }
 
-    while (music->getStatus() == sf::Music::Playing) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // loop until we're no longer main music, or we reach the end of non-looping sound
+    while (mainMusicSound == &sound || !ma_sound_at_end(&sound)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
+    ma_sound_stop(&sound);
+    ma_sound_uninit(&sound);
+    std::cout << "Finished playing file: " << filePath << std::endl;
 
     {
       std::lock_guard<std::mutex> lock(activeMusicsMutex);
-      activeMusics.erase(std::remove_if(activeMusics.begin(), activeMusics.end(),
-                                        [music](const auto& pair) { return pair.first == music; }),
-                         activeMusics.end());
+      maSoundMap.erase(filePath);
     }
-
-    delete music;
   });
 
   thread.detach();
 }
 
+void playMP3(u32 filePathu32, u32 volume) {
+  playMP3_internal(filePathu32, volume, false);
+}
+
 // TFL note: added
-std::vector<std::pair<sf::Music*, std::string>> g_tfl_hints;
+/* std::vector<std::pair<sf::Music*, std::string>> g_tfl_hints;
 std::mutex g_tfl_hints_mtx;
 bool g_interrupt_hint = false;
 
@@ -272,42 +293,38 @@ u32 play_tfl_hint(u32 file_name, u32 volume, u32 interrupt) {
 
   hint_thread.detach();
   return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
-}
+}*/
 
-sf::Music* g_tfl_music;
+ma_sound* g_tfl_music;
+
+ma_uint64 fade_length = 1000;  // TODO make this get from GOAL side.
 
 void stop_tfl_music(bool force) {
-  if (g_tfl_music) {
-    if (force) {
-      g_tfl_music->stop();
-      jak1::intern_from_c("*tfl-music-playing?*")->value = offset_of_s7();
-      return;
+  if (g_tfl_music && ma_sound_is_playing(g_tfl_music)) {
+    if (!force) {
+      ma_sound_set_fade_in_milliseconds(g_tfl_music, -1, 0, fade_length);
+      std::this_thread::sleep_for(std::chrono::milliseconds(fade_length));
     }
-    auto lerp = [](float a, float b, float t) { return a + t * (b - a); };
-    float time_elapsed = 1.f;
-    float start = g_tfl_music->getVolume();
-    float end = 0.f;
-    float val = start;
-    while (val >= 0.01f) {
-      val = lerp(start, end, 1.0f - time_elapsed);
-      g_tfl_music->setVolume(val);
-      // printf("Fading out music volume: %f\n", val);
-      time_elapsed -= 0.01f;
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    g_tfl_music->stop();
+
+    mainMusicMutex.lock();
+    ma_sound_stop(g_tfl_music);
+    g_tfl_music = NULL;
+    mainMusicMutex.unlock();
+
     jak1::intern_from_c("*tfl-music-playing?*")->value = offset_of_s7();
     // delete g_tfl_music;
   }
 }
 
 u32 play_tfl_music(u32 file_name, u32 volume) {
-  auto music_is_playing = jak1::intern_from_c("*tfl-music-playing?*")->value ==
+  /*auto music_is_playing = jak1::intern_from_c("*tfl-music-playing?*")->value ==
                           offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
   if (music_is_playing) {
     printf("TFL music is already playing!\n");
     return offset_of_s7();
-  }
+  }*/
+
+  // stop_tfl_music(true);
 
   std::thread music_thread([=]() {
     auto name_str = std::string(Ptr<String>(file_name)->data());
@@ -322,65 +339,79 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
       }
     }
 
-    auto* music = new sf::Music;
-    if (!music->openFromFile(std::filesystem::path(file))) {
-      printf("Failed to load music: %s\n", file.c_str());
-      delete music;
+    ma_result result;
+    ma_sound sound;
+
+    result = ma_sound_init_from_file(&maEngine, file.c_str(), 0, NULL, NULL, &sound);
+    if (result != MA_SUCCESS) {
+      std::cout << "Failed to load: " << file << std::endl;
       return;
     }
+
+    mainMusicMutex.lock();
+    g_tfl_music = &sound;
+    mainMusicMutex.unlock();
+
     float vol;
     memcpy(&vol, &volume, 4);
     printf("Playing music: %s (volume %f)\n", name_str.c_str(), vol);
-    music->setVolume(0.f);
-    music->setLoop(true);
-    music->play();
+    ma_sound_set_volume(g_tfl_music, 0.f);
+    ma_sound_set_looping(g_tfl_music, MA_TRUE);
+    auto volume = jak1::call_goal_function_by_name("tfl-music-player-volume");
+    ma_sound_set_fade_in_milliseconds(g_tfl_music, 0, vol / 100.0, fade_length);
+    ma_sound_start(g_tfl_music);
     jak1::intern_from_c("*tfl-music-playing?*")->value =
         offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
-    g_tfl_music = music;
-    auto lerp = [](float a, float b, float t) { return a + t * (b - a); };
-    float time_elapsed = 0.f;
-    float start = 0.f;
-    float end = vol;
-    float val = start;
-    while (val < vol) {
-      val = lerp(start, end, time_elapsed);
-      g_tfl_music->setVolume(val);
-      // printf("Fading in music volume: %f (target volume: %f)\n", val, vol);
-      time_elapsed += 0.01f;
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
 
-    auto paused_func = [](sf::Music* music) {
-      while (music->getStatus() == sf::Music::Paused) {
+    auto paused_func = [](ma_sound* music) {
+      while (!ma_sound_is_playing(music)) {
         auto pause = jak1::call_goal_function_by_name("paused?");
         if (pause == offset_of_s7()) {
-          music->play();
+          ma_sound_start(music);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
     };
 
-    auto play_func = [&music, &paused_func]() {
-      while (music->getStatus() == sf::Music::Playing) {
+    auto play_func = [&sound, &paused_func, file]() {
+      while (ma_sound_is_playing(&sound)) {
         if (MasterExit != RuntimeExitStatus::RUNNING) {
           stop_tfl_music(true);
+
+          ma_sound_uninit(&sound);
+          std::cout << "Finished playing file: " << file << std::endl;
+
+          {
+            std::lock_guard<std::mutex> lock(activeMusicsMutex);
+            maSoundMap.erase(file);
+          }
+
           return;
         }
         auto stop = jak1::intern_from_c("*tfl-music-stop*")->value;
         if (stop == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
           jak1::intern_from_c("*tfl-music-stop*")->value = offset_of_s7();
-          stop_tfl_music(false);
-          // delete g_tfl_music;
+          // stop_tfl_music(false);
+          //  delete g_tfl_music;
           // std::terminate();
+
+          stop_tfl_music(false);
+          ma_sound_uninit(&sound);
+          std::cout << "Finished playing file: " << file << std::endl;
+
+          {
+            std::lock_guard<std::mutex> lock(activeMusicsMutex);
+            maSoundMap.erase(file);
+          }
         }
         float vol;
         auto volume = jak1::call_goal_function_by_name("tfl-music-player-volume");
         memcpy(&vol, &volume, 4);
-        music->setVolume(vol);
+        ma_sound_set_volume(&sound, vol / 100.0);
         auto paused = jak1::call_goal_function_by_name("paused?");
         if (paused == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
-          music->pause();
-          paused_func(music);
+          ma_sound_stop(&sound);
+          paused_func(&sound);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
@@ -393,95 +424,39 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
   return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
 }
 
-// Declare a mutex for synchronizing access to mainMusicInstance
-std::mutex mainMusicMutex;
-
-// Define a structure to hold music data
-struct MusicData {
-  sf::Music* music;
-  std::string filePath;
-  u32 volume;
-  bool isPaused;  // Added flag to track pause/resume state
-};
-
-// Define a vector to hold the music instances
-std::vector<MusicData> musicInstances;
-std::string mainMusicFilePath;  // Global variable to store the main music file path
-
 // Function to stop the Main Music.
 void stopMainMusic() {
-  std::cout << "Trying to stop Main Music: " << mainMusicFilePath << std::endl;
-  auto it = musicInstances.begin();
-  while (it != musicInstances.end()) {
-    std::cout << "Looking for Main Music: " << mainMusicFilePath << std::endl;
-    if (it->filePath == mainMusicFilePath) {
-      std::cout << "FOUND!!! Main Music: " << mainMusicFilePath << std::endl;
-      it->music->stop();
-      delete it->music;
-      it = musicInstances.erase(it);  // 'erase' will automatically move to the next element
-    } else {
-      ++it;
-    }
+  mainMusicMutex.lock();
+  if (mainMusicSound && ma_sound_is_playing(mainMusicSound)) {
+    std::cout << "Stopping Main Music..." << std::endl;
+    ma_sound_stop(mainMusicSound);
+    mainMusicSound = NULL;
+    std::cout << "Stopped Main Music " << std::endl;
   }
+  mainMusicMutex.unlock();
 }
 
 // Function to play the Main Music.
 void playMainMusic(u32 filePathu32, u32 volume) {
-  std::string filePath = Ptr<String>(filePathu32).c()->data();
-  std::cout << "Playing Main Music: " << filePath << std::endl;
-  mainMusicFilePath = filePath;
-  // stopMainMusic();
-  //  Stop and clean up any existing music instances for this file path
-  for (auto it = musicInstances.begin(); it != musicInstances.end();) {
-    if (it->filePath == filePath) {
-      it->music->stop();
-      delete it->music;
-      it = musicInstances.erase(it);
-    } else {
-      ++it;
-    }
-  }
+  stopMainMusic();
 
-  // Create a new instance of sf::Music for the new Main Music.
-  sf::Music* mainMusic = new sf::Music;
-  if (!mainMusic->openFromFile(filePath)) {
-    std::cout << "Failed to load: " << filePath << std::endl;
-    delete mainMusic;
-    return;
-  }
-  mainMusic->setVolume(volume);
-  // Set looping to true to make the track loop
-  mainMusic->setLoop(true);
+  std::cout << "Playing Main Music" << std::endl;
 
-  mainMusic->play();
-
-  // Store the Main Music instance in the vector.
-  MusicData musicData = {mainMusic, filePath, volume, false};  // Initialize isPaused to false
-  musicInstances.push_back(musicData);
+  playMP3_internal(filePathu32, volume, true);
 }
 
 void pauseMainMusic() {
   mainMusicMutex.lock();
-  for (auto& musicData : musicInstances) {
-    if (musicData.music && !musicData.isPaused) {
-      if (musicData.music->getStatus() == sf::SoundSource::Playing) {
-        musicData.music->pause();
-        musicData.isPaused = true;
-      }
-    }
+  if (mainMusicSound && ma_sound_is_playing(mainMusicSound)) {
+    ma_sound_stop(mainMusicSound);
   }
   mainMusicMutex.unlock();
 }
 
 void resumeMainMusic() {
   mainMusicMutex.lock();
-  for (auto& musicData : musicInstances) {
-    if (musicData.music && musicData.isPaused) {
-      if (musicData.music->getStatus() == sf::SoundSource::Paused) {
-        musicData.music->play();
-        musicData.isPaused = false;
-      }
-    }
+  if (mainMusicSound && !ma_sound_is_playing(mainMusicSound)) {
+    ma_sound_start(mainMusicSound);
   }
   mainMusicMutex.unlock();
 }
@@ -489,11 +464,8 @@ void resumeMainMusic() {
 // Function to change the volume of the Main Music.
 void changeMainMusicVolume(u32 volume) {
   mainMusicMutex.lock();
-  for (auto& musicData : musicInstances) {
-    if (musicData.music) {
-      musicData.music->setVolume(volume);
-      musicData.volume = volume;
-    }
+  if (mainMusicSound) {
+    ma_sound_set_volume(mainMusicSound, ((float)volume) / 100.0);
   }
   mainMusicMutex.unlock();
 }
@@ -1387,7 +1359,7 @@ void init_common_pc_port_functions(
   make_func_symbol_func("main-music-volume", (void*)changeMainMusicVolume);
 
   // TFL note: added
-  make_func_symbol_func("play-tfl-hint", (void*)play_tfl_hint);
+  // make_func_symbol_func("play-tfl-hint", (void*)play_tfl_hint);
   make_func_symbol_func("play-tfl-music", (void*)play_tfl_music);
 
   // discord rich presence

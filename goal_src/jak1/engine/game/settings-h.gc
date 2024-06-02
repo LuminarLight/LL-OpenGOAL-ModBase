@@ -42,7 +42,6 @@
    (music-volume-movie    float)
    (sfx-volume-movie      float)
    (music                 symbol)
-   (custom-music          symbol)
    (bg-r                  float)
    (bg-g                  float)
    (bg-b                  float)
@@ -57,7 +56,8 @@
    (ambient-volume        float)
    (ambient-volume-movie  float)
    (dialog-volume-hint    float)
-   (dummy                 uint32  11)
+   (custom-music          symbol)
+   (dummy                 uint32  10)
    )
   (:methods
     (update-from-engine (_type_ engine) setting-data)

@@ -507,7 +507,6 @@
    "flut_common/target-flut.gc"
 
    ;; TFL note: added
-   "tfl_common/super-eco-crystal.gc"
    "tfl_common/tfl-hint-data.gc"
    "tfl_common/tfl-hint.gc"
    )

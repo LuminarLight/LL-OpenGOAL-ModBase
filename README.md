@@ -19,10 +19,12 @@ This change is currently only implemented for TPL. It wouldn't make too much sen
 ### Custom Music
 
 I borrowed the custom music system from 'The Forgotten Lands' mod, and made some changes to it. As far as I know, the base of that whole system was initially created by Zed, and then it was greatly expanded by Hat-Kid. Please let me know if this is inaccurate and I will adjust this section.
+Later the other modbase found a worthy replacement for SFML, called 'miniaudio', and they let me look at their changes. I implemented these on our side. 
 
 I implemented a way to use custom music for music ambients. To use it, just use the `custom-music` lump instead of the `music` lump in your music ambient. Also expanded the 3D debug text that is drawn when you are displaying music ambients.
 
 I made some other minor changes to the custom music system for now, the GOAL side is quite different now but the c++ side is mostly unchanged. For the future I want to make its namings more generic/neutral (so they don't refer to The Forgotten Lands in the name). I also want to implement a way to have music variants/flavors, and I already have a clear vision for it, but I will have to rewrite a lot of code on the c++ side. And while there, I will probably do a general cleanup of that code as well.
+Also, for now, the TFL hints system is not reimplemented, since we switched to miniaudio. It is planned though.
 
 ---
 
@@ -100,12 +102,13 @@ I am happy if anyone finds this useful. But I have a request: If you learn more 
 ## Future Plans
 
 - Implement flavor/variant support for custom music.
-- Allow overriding level's custom music in certain situations.
-- Fix the github action. Right now it fails due to that library used for the custom music.
+- Make the TFL hints system work again.
+- Clean up GitHub Actions.
 - Understand more about the navmesh system (node, route).
 - Show how to add new `battle` actors, also show the part that needs to be done through code. I have already touched the battle system in the past. I should clear things up and implement an example.
 - Rewrite the warp gate system, to make it more extendable. I imagine a lot of custom level mods will want to use the warp gate. But its code is ugly and not easy to extend.
 - Make this mod base compatible with the Unofficial Mod Launcher (the one by barg and Zed).
+- Re-allow defining a water-actor for pontoons. It has valid use cases.
 
 ## How To Use
 
