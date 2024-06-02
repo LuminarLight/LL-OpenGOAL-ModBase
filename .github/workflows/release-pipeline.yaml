@@ -5,9 +5,9 @@ on:
     workflows: ["🏭 Draft Release"]
     types:
       - completed
-  # push:
-  #   tags:
-  #     - v*
+  push:
+    tags:
+      - v*
 
 permissions:
   contents: write
