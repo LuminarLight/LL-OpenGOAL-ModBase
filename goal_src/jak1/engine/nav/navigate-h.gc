@@ -165,8 +165,7 @@
    ;; not sure why it's separate from 27 (and such a different implementation). there might be some details I'm missing here.
    (is-in-mesh? (_type_ vector float meters) symbol)))
 
-(defmethod inspect nav-mesh
-  ((obj nav-mesh))
+(defmethod inspect ((obj nav-mesh))
   (format #t "(new 'static 'nav-mesh~%" obj (-> obj type))
   (format #t
           "~T:bounds (new 'static 'sphere :x (meters ~f) :y (meters ~f) :z (meters ~f) :w (meters ~f))~%"
