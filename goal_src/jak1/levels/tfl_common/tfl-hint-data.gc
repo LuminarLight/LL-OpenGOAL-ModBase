@@ -1,22 +1,20 @@
 ;;-*-Lisp-*-
 (in-package goal)
-
 (deftype tfl-hint-data (structure)
-  ((file-name string) ;; file name (with extension)
-   (alt-names (array string)) ;; alternate files to play, picked at random
-   (text-id text-id) ;; used to mark the hint as seen
-   (voicebox? symbol) ;; whether to spawn the communicator for this hint
-   (interrupt? symbol) ;; can this hint be interrupted by another one?
-   (repeat? symbol) ;; whether to repeat the hint
-   (repeat-delay time-frame) ;; how long to wait before repeating
-   (task game-task) ;; only play if this task is open
-   (task-status task-status) ;; only play if the hint's task is in this cstage (closed, need-resolution, etc.)
-   (force-playback? symbol) ;; whether to play regardless of play-hints setting
-   (target-mode pair) ;; only play if jak is in a specific mode (empty list to ignore)
-   (close-task game-task) ;; if set, this task will be set to the cstage defined by close-task-status upon listening to the hint
+  ((file-name         string) ;; file name (with extension)
+   (alt-names         (array string)) ;; alternate files to play, picked at random
+   (text-id           text-id) ;; used to mark the hint as seen
+   (voicebox?         symbol) ;; whether to spawn the communicator for this hint
+   (interrupt?        symbol) ;; can this hint be interrupted by another one?
+   (repeat?           symbol) ;; whether to repeat the hint
+   (repeat-delay      time-frame) ;; how long to wait before repeating
+   (task              game-task) ;; only play if this task is open
+   (task-status       task-status) ;; only play if the hint's task is in this cstage (closed, need-resolution, etc.)
+   (force-playback?   symbol) ;; whether to play regardless of play-hints setting
+   (target-mode       pair) ;; only play if jak is in a specific mode (empty list to ignore)
+   (close-task        game-task) ;; if set, this task will be set to the cstage defined by close-task-status upon listening to the hint
    (close-task-status task-status) ;; set close-task to this specific cstage after listening to the hint
-   )
-  )
+   ))
 
 #|
 target-mode syntax:
@@ -37,38 +35,30 @@ examples:
 '(anim eichar-stance-loop 0): the eichar-stance-loop animation is playing on channel 0
 |#
 
-(defmacro static-hint-data (&key file-name
-                            &key (alt-names (new 'static 'boxed-array :type string))
-                            &key (text-id (text-id zero))
-                            &key (voicebox? #f)
-                            &key (interrupt? #f)
-                            &key (repeat? #f)
-                            &key (repeat-delay (seconds 5))
-                            &key (task (game-task none))
-                            &key (task-status (task-status unknown))
-                            &key (force-playback? #f)
-                            &key (target-mode '())
-                            &key (close-task (game-task none))
-                            &key (close-task-status (task-status unknown)))
-  `(new 'static 'tfl-hint-data
-     :file-name ,file-name
-     :alt-names ,alt-names
-     :text-id ,text-id
-     :voicebox? ,voicebox?
-     :interrupt? ,interrupt?
-     :repeat? ,repeat?
-     :repeat-delay ,repeat-delay
-     :task ,task
-     :task-status ,task-status
-     :force-playback? ,force-playback?
-     :target-mode ,target-mode
-     :close-task ,close-task
-     :close-task-status ,close-task-status
-     )
-  )
+(defmacro static-hint-data (&key file-name &key (alt-names (new 'static 'boxed-array :type string)) &key (text-id (text-id zero)) &key (voicebox? #f) &key (interrupt? #f) &key (repeat? #f) &key (repeat-delay (seconds 5)) &key (task (game-task none)) &key (task-status (task-status unknown)) &key (force-playback? #f) &key (target-mode '()) &key (close-task (game-task none)) &key (close-task-status (task-status unknown)))
+  `(new 'static
+       'tfl-hint-data
+       :file-name ,file-name
+       :alt-names ,alt-names
+       :text-id ,text-id
+       :voicebox? ,voicebox?
+       :interrupt? ,interrupt?
+       :repeat? ,repeat?
+       :repeat-delay ,repeat-delay
+       :task ,task
+       :task-status ,task-status
+       :force-playback? ,force-playback?
+       :target-mode ,target-mode
+       :close-task ,close-task
+       :close-task-status ,close-task-status))
 
-(define *tfl-hints* (new 'static 'boxed-array :type tfl-hint-data
-                            #|(static-hint-data
+(define *tfl-hints*
+  (new 'static
+       'boxed-array
+       :type
+       tfl-hint-data
+       #|
+(static-hint-data
                               :file-name "crystalc-tfl-hint-01-daxPortal.wav"
                               :text-id (text-id crystalc-tfl-hint-01-daxPortal)
                               :force-playback? #t
@@ -196,6 +186,6 @@ examples:
                               :text-id (text-id energy-bay-tfl-hint-04-SamosCrystal)
                               :voicebox? #t
                               :force-playback? #t
-                              )|#
-                            )
-  )
+                              )
+       |#
+       ))

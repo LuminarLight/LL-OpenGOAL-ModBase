@@ -1,122 +1,97 @@
 ;;-*-Lisp-*-
 (in-package goal)
-
 (define *tfl-music-playing?* #f)
+
 (define *tfl-music-stop* #f)
 
 (deftype tfl-music-player (process)
-  ((stored-music symbol)
-   )
+  ((stored-music symbol))
   (:methods
-    (play! (_type_) none)
-    (stop! (_type_) none)
-    (set-stored-music! (_type_) none)
-    )
+   (play! (_type_) none)
+   (stop! (_type_) none)
+   (set-stored-music! (_type_) none))
   (:states
-    tfl-music-player-idle
-    tfl-music-player-playing
-    tfl-music-player-fade
-    )
-  )
+   tfl-music-player-idle
+   tfl-music-player-playing
+   tfl-music-player-fade))
 
 (define *tfl-music-player* (the (pointer tfl-music-player) #f))
 
 (defun tfl-music-player-volume ()
-  (-> *setting-control* current music-volume)
-  )
+  (-> *setting-control* current music-volume))
 
 (defmethod set-stored-music! ((this tfl-music-player))
   (set! (-> this stored-music) (-> *setting-control* default custom-music))
-  (none)
-  )
+  (none))
 
 (defun is-there-music? ((this tfl-music-player))
   (when (and (!= (-> this stored-music) 0) (!= (-> this stored-music) #f))
-    (return #t)
-    )
-  #f
-  )
+    (return #t))
+  #f)
 
 (defmethod play! ((this tfl-music-player))
   (when (is-there-music? this)
-    (if *tfl-music-playing?*
-      (stop! this)
-      )
-    (play-tfl-music (symbol->string (-> this stored-music)) (tfl-music-player-volume))
-    )
-  (none)
-  )
+    (if *tfl-music-playing?* (stop! this))
+    (play-tfl-music (symbol->string (-> this stored-music)) (tfl-music-player-volume)))
+  (none))
 
 (defmethod stop! ((this tfl-music-player))
   (when *tfl-music-playing?*
-    (true! *tfl-music-stop*)
-    )
-  (none)
-  )
+    (true! *tfl-music-stop*))
+  (none))
 
 (defmethod deactivate ((this tfl-music-player))
   (stop! this)
   (false! *tfl-music-playing?*)
   (false! *tfl-music-stop*)
   (set! *tfl-music-player* (the (pointer tfl-music-player) #f))
-  (call-parent-method this)
-  )
+  (call-parent-method this))
 
 (defbehavior sleep-code process ()
   (logior! (-> self mask) (process-mask sleep-code))
-  (loop (suspend))
-  (none)
-  )
+  (loop
+    (suspend))
+  (none))
 
 (defbehavior tfl-music-player-init-by-other tfl-music-player ()
   (set! *tfl-music-player* (the (pointer tfl-music-player) (process->ppointer self)))
   (set-stored-music! self)
   (go tfl-music-player-idle)
-  (none)
-  )
+  (none))
 
 (defbehavior tfl-music-player-post tfl-music-player ()
   (let ((actual (-> *setting-control* default custom-music)))
     (when (!= (-> self stored-music) actual)
       (set-stored-music! self)
-      (stop! self)
-      )
-    )
-  (none)
-  )
+      (stop! self)))
+  (none))
 
-(defstatehandler tfl-music-player
-  :post tfl-music-player-post
-  )
+(defstatehandler tfl-music-player :post tfl-music-player-post)
 
 (defstate tfl-music-player-idle (tfl-music-player)
   :code sleep-code
-  :trans (behavior ()
-    (when (is-there-music? self)
-      (go tfl-music-player-playing)
-      )
-    )
-  )
+  :trans
+    (behavior ()
+      (when (is-there-music? self)
+        (go tfl-music-player-playing))))
 
 (defstate tfl-music-player-playing (tfl-music-player)
-  :enter (behavior ()
-    (play! self)
-    (dotimes (i 10) (suspend))
-    )
-  :code (behavior ()
-    (while *tfl-music-playing?*
-      (suspend)
-      )
-    (go tfl-music-player-fade)
-    )
-  )
+  :enter
+    (behavior ()
+      (play! self)
+      (dotimes (i 10)
+        (suspend)))
+  :code
+    (behavior ()
+      (while *tfl-music-playing?*
+        (suspend))
+      (go tfl-music-player-fade)))
 
 (defstate tfl-music-player-fade (tfl-music-player)
-  :code (behavior ()
-    (when *tfl-music-playing?*
-      (stop! self)
-      )
-    (dotimes (i 10) (suspend))
-    (go tfl-music-player-idle)
-    )
-  )
+  :code
+    (behavior ()
+      (when *tfl-music-playing?*
+        (stop! self))
+      (dotimes (i 10)
+        (suspend))
+      (go tfl-music-player-idle)))
