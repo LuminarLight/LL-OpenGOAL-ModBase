@@ -14,8 +14,7 @@
 ;;;; methods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod set-game-setting! pc-settings-jak1
-  ((obj pc-settings-jak1) (setting symbol) (value symbol))
+(defmethod set-game-setting! ((obj pc-settings-jak1) (setting symbol) (value symbol))
   (case setting
     (('video-mode)
      (set! (-> *setting-control* current video-mode) #f)
@@ -23,26 +22,22 @@
     (('aspect-ratio) (set! (-> *setting-control* default aspect-ratio) value))
     (else (format #t "unknown setting  ~A (~A) to set-game-setting!" setting value))))
 
-(defmethod get-game-setting pc-settings-jak1
-  ((obj pc-settings-jak1) (setting symbol))
+(defmethod get-game-setting ((obj pc-settings-jak1) (setting symbol))
   (case setting
     (('video-mode) (-> *setting-control* default video-mode))
     (('aspect-ratio) (-> *setting-control* default aspect-ratio))
     (else (format #t "unknown setting  ~A to get-game-setting" setting) #f)))
 
-(defmethod set-game-language! pc-settings-jak1
-  ((obj pc-settings-jak1) (lang language-enum))
+(defmethod set-game-language! ((obj pc-settings-jak1) (lang language-enum))
   (set! (-> *setting-control* default language) lang))
 
-(defmethod get-game-language pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod get-game-language ((obj pc-settings-jak1))
   (-> *setting-control* default language))
 
 ;; where we store the input progress for the cheat codes. make sure there's enough space for all cheats.
 (define *pc-cheat-temp* (new 'global 'inline-array 'uint8 PC_CHEAT_MAX))
 
-(defmethod update-cheats pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod update-cheats ((obj pc-settings-jak1))
   "run cheats."
   ;; first check for cheat inputs.
   (when (and (cpad-hold? 0 l2) (cpad-hold? 0 l1) (cpad-hold? 0 r2) (cpad-hold? 0 r1))
@@ -142,8 +137,7 @@
   (logior! (-> obj cheats-known) (-> obj cheats))
   0)
 
-(defmethod update-music-log pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod update-music-log ((obj pc-settings-jak1))
   "update music log settings."
   ;; add whatever is playing to the music log.
   (add-to-music-log obj (-> *setting-control* current music) (the int (-> *setting-control* current sound-flava)))
@@ -194,8 +188,7 @@
     (add-to-music-log obj 'credits 2))
   0)
 
-(defmethod update-discord-rpc pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod update-discord-rpc ((obj pc-settings-jak1))
   "update discord rpc module"
   (let ((info (new 'stack 'discord-info)))
     (set! (-> info fuel) (&-> *game-info* fuel))
@@ -252,15 +245,13 @@
       (pc-discord-rpc-update info)))
   (none))
 
-(defmethod update-speedrun pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod update-speedrun ((obj pc-settings-jak1))
   "update speedrun module"
   (with-profiler "speedrun-update"
     (speedrun-mode-update))
   (none))
 
-(defmethod update-video-hacks pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod update-video-hacks ((obj pc-settings-jak1))
   "update the graphics hacks used for sprites and other things. ugh."
   (set! (-> (get-video-params) relative-x-scale) (-> obj aspect-ratio-reciprocal))
   (set! (-> (get-video-params) relative-x-scale-reciprical) (-> obj aspect-ratio-scale))
@@ -280,13 +271,11 @@
       ;(set! (-> pr button-scale) (+ 1.0 (* wide-adjust 0.1)))
       )))
 
-(defmethod led-enabled? pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod led-enabled? ((obj pc-settings-jak1))
   "should the controller led be set?"
   (or (-> obj controller-led-hp?) (-> obj controller-led-eco?) (-> obj controller-led-heat?)))
 
-(defmethod update-led pc-settings-jak1
-  ((obj pc-settings-jak1))
+(defmethod update-led ((obj pc-settings-jak1))
   "set the controller led color by modifying the controller-led-color vector"
   ;; default color is just blue.
   (set! (-> obj controller-led-color r) 0.0)
@@ -412,8 +401,7 @@
   (dotimes (i PC_MUSIC_LOG_LENGTH)
     (set! (-> *pc-settings* secrets music i flava-mask) -1)))
 
-(defmethod add-to-music-log pc-settings-jak1
-  ((obj pc-settings-jak1) (music symbol) (flava int))
+(defmethod add-to-music-log ((obj pc-settings-jak1) (music symbol) (flava int))
   "add music and flava information to the music log.
    if music already exists, adds flava. if flava already exists, nothing happens."
   ;; go through our music log
@@ -434,8 +422,7 @@
 ;;;; file I/O
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod handle-input-settings pc-settings-jak1
-  ((obj pc-settings-jak1) (file file-stream))
+(defmethod handle-input-settings ((obj pc-settings-jak1) (file file-stream))
   "handle the text parsing input for the 'settings' group"
   ((method-of-type pc-settings handle-input-settings) obj file)
   (case-str *pc-temp-string*
@@ -470,8 +457,7 @@
                                                              (set! (-> obj secrets music i flava-mask) (file-stream-read-int file))))))))))
   0)
 
-(defmethod handle-output-settings pc-settings-jak1
-  ((obj pc-settings-jak1) (file file-stream))
+(defmethod handle-output-settings ((obj pc-settings-jak1) (file file-stream))
   "handle the text writing output for the 'settings' group"
   ((method-of-type pc-settings handle-output-settings) obj file)
   (format file "  (money-starburst? ~A)~%" (-> obj money-starburst?))

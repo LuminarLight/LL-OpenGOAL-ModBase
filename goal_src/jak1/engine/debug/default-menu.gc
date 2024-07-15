@@ -9,10 +9,6 @@
 (require "engine/debug/memory-usage.gc")
 (require "engine/debug/menu.gc")
 
-;; name: default-menu.gc
-;; name in dgo: default-menu
-;; dgos: GAME, ENGINE
-
 ;; Forward declarations for stuff we haven't written yet:
 (define-extern *edit-instance* string)
 
@@ -217,27 +213,27 @@
       (logtest? (-> v1-0 flags) arg0))))
 
 (defun all-texture-tweak-adjust ((arg0 texture-page-dir) (arg1 float))
-  ; (dotimes (s4-0 (-> arg0 length))
-  ; (let ((s3-0 (-> arg0 entries s4-0 page)))
-  ; (dotimes (s2-0 (min (-> s3-0 length) (-> arg0 entries s4-0 length)))
-  ; (when (-> arg0 entries s4-0 link)
-  ; (let ((v1-12 (+ (the-as uint (-> arg0 entries s4-0 link)) (* s2-0 4)))
-  ; (s1-0 (-> arg0 entries s4-0 page data s2-0))
-  ; )
-  ; (+! (-> s1-0 uv-dist) arg1)
-  ; (+ v1-12 0)
-  ; (let ((s0-0 (the-as object (* (-> (dynamic-array-field-access v1-12 next PLACEHOLDER) shader) 16))))
-  ; (while (nonzero? (the-as uint s0-0))
-  ; (adgif-shader-update! (the-as adgif-shader s0-0) s1-0)
-  ; (+ (the-as uint s0-0) 40)
-  ; (set! s0-0 (* (-> (the-as adgif-shader s0-0) next shader) 16))
-  ; )
-  ; )
-  ; )
-  ; )
-  ; )
-  ; )
-  ; )
+  ;; (dotimes (s4-0 (-> arg0 length))
+  ;;   (let ((s3-0 (-> arg0 entries s4-0 page)))
+  ;;     (dotimes (s2-0 (min (-> s3-0 length) (-> arg0 entries s4-0 length)))
+  ;;       (when (-> arg0 entries s4-0 link)
+  ;;         (let ((v1-12 (+ (the-as uint (-> arg0 entries s4-0 link)) (* s2-0 4)))
+  ;;               (s1-0 (-> arg0 entries s4-0 page data s2-0))
+  ;;               )
+  ;;           (+! (-> s1-0 uv-dist) arg1)
+  ;;           (+ v1-12 0)
+  ;;           (let ((s0-0 (the-as object (* (-> (dynamic-array-field-access v1-12 next PLACEHOLDER) shader) 16))))
+  ;;             (while (nonzero? (the-as uint s0-0))
+  ;;               (adgif-shader-update! (the-as adgif-shader s0-0) s1-0)
+  ;;               (+ (the-as uint s0-0) 40)
+  ;;               (set! s0-0 (* (-> (the-as adgif-shader s0-0) next shader) 16))
+  ;;               )
+  ;;             )
+  ;;           )
+  ;;         )
+  ;;       )
+  ;;     )
+  ;;   )
   0
   (none))
 

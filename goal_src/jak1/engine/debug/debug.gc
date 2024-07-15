@@ -10,10 +10,6 @@
 (require "engine/gfx/lights-h.gc")
 (require "engine/math/vector.gc")
 
-;; name: debug.gc
-;; name in dgo: debug
-;; dgos: GAME, ENGINE
-
 ;; This file contains functions for debug drawing.
 ;; In general, the 3d functions draw using the camera and the 2d functions draw in screen coordinated.
 ;; Most functions take a boolean as their first argument. If the boolean is set to #f, it will skip drawing the point.
@@ -667,8 +663,7 @@
       (else (+! gp-0 1)))
     gp-0))
 
-(defmethod inspect debug-vertex-stats
-  ((obj debug-vertex-stats))
+(defmethod inspect ((obj debug-vertex-stats))
   (format #t "[~8x] ~A~%" obj (-> obj type))
   (format #t "~Tlength: ~D~%" (-> obj length))
   (format #t "~Tpos-count: ~D~%" (-> obj pos-count))

@@ -6,10 +6,6 @@
 (require "engine/gfx/background/background-h.gc")
 (require "engine/gfx/tfrag/tfrag-near.gc")
 
-;; name: tfrag.gc
-;; name in dgo: tfrag
-;; dgos: GAME, ENGINE
-
 ;; TFRAG drawing procedure
 
 ;; - when a level is loaded, it adds a connection from the bsp-header to the *background-draw-engine* with the add-bsp-drawable function.
@@ -103,8 +99,7 @@
 ;; tree/array methods
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod inspect drawable-inline-array-tfrag
-  ((this drawable-inline-array-tfrag))
+(defmethod inspect ((this drawable-inline-array-tfrag))
   "Inspect an array of tfragments."
   (format #t "[~8x] ~A~%" this (-> this type))
   (format #t "~Tlength: ~D~%" (-> this length))

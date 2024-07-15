@@ -8,10 +8,6 @@
 (require "engine/common-obs/process-drawable.gc")
 (require "engine/entity/entity-table.gc")
 
-;; name: entity.gc
-;; name in dgo: entity
-;; dgos: GAME, ENGINE
-
 ;; DECOMP BEGINS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1163,16 +1159,16 @@
 (defmethod birth! ((this entity-actor))
   "Create a process for this entity and start it."
   ;; temp
-  ; (when (or (not (this-etype? process))
-  ; ;; disallowed types
-  ; ;(this-etype?)
-  ; (zero? (-> this etype)))
-  ; (when (nonzero? (-> this etype))
-  ; (birth-log "rejecting etype ~A birth~%" (-> this etype))
-  ; )
-  ; (logior! (-> this extra perm status) (entity-perm-status bit-0))
-  ; (return this)
-  ; )
+  ;; (when (or (not (this-etype? process))
+  ;;           ;disallowed types
+  ;;           ;(this-etype?)
+  ;;           (zero? (-> this etype)))
+  ;;   (when (nonzero? (-> this etype))
+  ;;       (birth-log "rejecting etype ~A birth~%" (-> this etype))
+  ;;       )
+  ;;   (logior! (-> this extra perm status) (entity-perm-status bit-0))
+  ;;   (return this)
+  ;;   )
   ;;(birth-log "call to birth! on ~A~%" this)
   (custom-nav-mesh-check-and-setup this)
   (let* ((entity-type (-> this etype))

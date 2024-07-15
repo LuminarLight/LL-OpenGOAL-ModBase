@@ -631,7 +631,10 @@
        (new 'static 'game-option :option-type (game-option-type lod-fg) :name (text-id lod-fg) :scale #t)
        (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id ps2-parts) :scale #t)
        (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id force-envmap) :scale #t)
-       (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id force-actors) :scale #t)
+       (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id force-actors) :scale #t
+          :option-disabled-func
+            (lambda ()
+              (-> *pc-settings* speedrunner-mode?)))
        (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #t)))
 
 ;; TODO - aspect ratios are hard-coded
@@ -1532,8 +1535,7 @@
   (progress-scroll-reset)
   (none))
 
-(defmethod respond-common progress
-  ((obj progress))
+(defmethod respond-common ((obj progress))
   "common logic for navigating the progress menu.
    this is the overriden version, purged of no longer necessary code and with additional new code."
   ;; read memcard
@@ -2149,8 +2151,7 @@
             (commit-to-file *pc-settings*)))))))
   (none))
 
-(defmethod respond-memcard progress
-  ((obj progress))
+(defmethod respond-memcard ((obj progress))
   "logic for handling input in memcard screens."
   (let ((s5-0 (-> obj card-info)))
     (when (and s5-0 (not (-> obj in-transition)))
@@ -2305,8 +2306,7 @@
   0
   (none))
 
-(defmethod draw-options progress
-  ((obj progress) (arg0 int) (arg1 int) (arg2 float))
+(defmethod draw-options ((obj progress) (arg0 int) (arg1 int) (arg2 float))
   "common logic for drawing options menus."
   (let ((options (-> *options-remap* (-> obj display-state))))
     (when options
@@ -2745,8 +2745,7 @@
                           128)
   0)
 
-(defmethod draw-notice-screen progress
-  ((obj progress))
+(defmethod draw-notice-screen ((obj progress))
   (hide-progress-icons)
   (when *common-text*
     (let ((a1-1 (new 'stack

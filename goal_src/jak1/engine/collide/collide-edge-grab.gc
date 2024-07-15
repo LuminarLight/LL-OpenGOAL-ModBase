@@ -9,10 +9,6 @@
 (require "engine/collide/collide-shape-h.gc")
 (require "engine/debug/debug.gc")
 
-;; name: collide-edge-grab.gc
-;; name in dgo: collide-edge-grab
-;; dgos: GAME, ENGINE
-
 ;; DECOMP BEGINS
 
 (defmethod find-edge-grabs! ((this target) (arg0 collide-cache))
@@ -281,8 +277,7 @@
     f30-0))
 
 ;; 17 cew
-(defmethod should-add-to-list? collide-edge-work
-  ((this collide-edge-work) (arg0 collide-edge-hold-item) (arg1 collide-edge-edge))
+(defmethod should-add-to-list? ((this collide-edge-work) (arg0 collide-edge-hold-item) (arg1 collide-edge-edge))
   (local-vars
     (r0-0 uint128)
     (v1-1 uint128)
