@@ -107,7 +107,6 @@ I am happy if anyone finds this useful. But I have a request: If you learn more 
 - Understand more about the navmesh system (node, route).
 - Show how to add new `battle` actors, also show the part that needs to be done through code. I have already touched the battle system in the past. I should clear things up and implement an example.
 - Rewrite the warp gate system, to make it more extendable. I imagine a lot of custom level mods will want to use the warp gate. But its code is ugly and not easy to extend.
-- Make this mod base compatible with the Unofficial Mod Launcher (the one by barg and Zed).
 - Re-allow defining a water-actor for pontoons. It has valid use cases.
 
 ## How To Use
