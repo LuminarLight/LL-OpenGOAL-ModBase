@@ -64,7 +64,7 @@ void kmachine_init_globals_common() {
   vif1_interrupt_handler = 0;
   vblank_interrupt_handler = 0;
   ee_clock_timer = Timer();
-
+  ma_engine_uninit(&maEngine);
   ma_engine_init(NULL, &maEngine);
 }
 
