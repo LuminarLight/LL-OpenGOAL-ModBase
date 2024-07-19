@@ -56,6 +56,8 @@ ma_engine maEngine;
 std::map<std::string, ma_sound> maSoundMap;
 ma_sound* mainMusicSound;
 
+bool firstboot = true;
+
 void kmachine_init_globals_common() {
   memset(pad_dma_buf, 0, sizeof(pad_dma_buf));
   isodrv = fakeiso;  // changed. fakeiso is the only one that works in opengoal.
@@ -64,9 +66,10 @@ void kmachine_init_globals_common() {
   vif1_interrupt_handler = 0;
   vblank_interrupt_handler = 0;
   ee_clock_timer = Timer();
-  if (&maEngine != NULL)
+  if (!firstboot)
     ma_engine_uninit(&maEngine);
   ma_engine_init(NULL, &maEngine);
+  firstboot = false;
 }
 
 /*!
