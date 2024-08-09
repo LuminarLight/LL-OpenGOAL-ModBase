@@ -8,6 +8,8 @@
   "mother-spider.o"
   "driller-lurker.o"
   "quicksandlurker.o"
+  "snow-bunny.o"
+  "citb-bunny.o"
   "hopper.o"
   "lurkerpuppy.o"
   "eichar-tube+0-ag.go"
@@ -22,5 +24,6 @@
   "quicksandlurker-ag.go"
   "hopper-ag.go"
   "lurkerpuppy-ag.go"
+  "citb-bunny-ag.go"
   "lltest2.go"
  ))

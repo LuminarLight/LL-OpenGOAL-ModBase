@@ -36,7 +36,7 @@
 
   // All art groups you want to use in your custom level. Will add their models and corresponding textures to the FR3 file.
   // Note: You will still have to add them to your level's .gd file.
-  "art_groups": ["plat-ag", "water-anim-training-ag", "water-anim-sunken-dark-eco-ag", "driller-lurker-ag", "mother-spider-ag", "baby-spider-ag", "spider-egg-ag", "babak-ag", "quicksandlurker-ag", "hopper-ag", "lurkerpuppy-ag"],
+  "art_groups": ["plat-ag", "water-anim-training-ag", "water-anim-sunken-dark-eco-ag", "driller-lurker-ag", "mother-spider-ag", "baby-spider-ag", "spider-egg-ag", "babak-ag", "quicksandlurker-ag", "hopper-ag", "lurkerpuppy-ag", "citb-bunny-ag"],
 
   // Ambients you want to use in your custom level. Ambients can be used for various things like changing the music variation (flava),
   // adding ambient sounds, level name hints, etc.
@@ -133,6 +133,89 @@
             [-37.38, 601.69, -41.01],
             [-26.06, 600.00, -41.12]
           ]
+      }
+    },
+
+    {
+      "aid": 40100,
+      "trans": [16.21, 560.79, 471.81],
+      "etype": "citb-bunny",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [16.21, 560.79, 471.81, 10],
+      "lump": {
+        "name": "lltest2-citb-bunny-1",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "path": ["vector3m",
+            [16.21, 560.79, 471.81],
+            [16.21, 560.79, 485.55],
+            [38.29, 560.79, 485.55]
+          ]
+      }
+    },
+
+    {
+      "aid": 40101,
+      "trans": [54.44, 560.79, 483.36],
+      "etype": "citb-bunny",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [54.44, 560.79, 483.36, 10],
+      "lump": {
+        "name": "lltest2-citb-bunny-2",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "nav-mesh-actor": ["uint32", 40100],
+        "path": ["vector3m",
+            [54.44, 560.79, 483.36],
+            [54.44, 560.79, 502.10],
+            [37.70, 560.79, 502.10]
+          ]
+      }
+    },
+
+    {
+      "aid": 40102,
+      "trans": [37.70, 560.79, 502.10],
+      "etype": "citb-bunny",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [37.70, 560.79, 502.10, 10],
+      "lump": {
+        "name": "lltest2-citb-bunny-3",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "nav-mesh-actor": ["uint32", 40100],
+        "path-actor": ["uint32", 40101]
+      }
+    },
+
+    {
+      "aid": 40103,
+      "trans": [38.29, 560.79, 485.55],
+      "etype": "citb-bunny",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [38.29, 560.79, 485.55, 10],
+      "lump": {
+        "name": "lltest2-citb-bunny-4",
+        "vis-dist": ["meters", 200.0],
+        "cam-notice-dist": ["meters", 30.0],
+        "idle-distance": ["meters", 50.0],
+        "cam-vert": ["meters", 8.0],
+        "cam-horz": ["meters", 20.0],
+        "nav-mesh-actor": ["uint32", 40100],
+        "path-actor": ["uint32", 40100]
       }
     },
 

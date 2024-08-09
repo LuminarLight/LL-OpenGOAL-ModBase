@@ -1154,7 +1154,183 @@
                      (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x44 #x14 #x3 #x45))
                      (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x0 #x0 #x0 #x0)))))
      (entity-nav-login this) ;; I don't need to know what this does, all I know is that this is needed - the navmesh won't be okay without it.
-     )))
+     )
+    ((40100) ;; lltest2-citb-bunny-1
+      (set! (-> this nav-mesh)
+        (new 'static 'nav-mesh
+          :custom-hacky? #t
+          :bounds (new 'static 'sphere :x (meters 38.2) :y (meters 560.82) :z (meters 486.94) :w (meters 48.4))
+          :origin (new 'static 'vector :x (meters 38.2) :y (meters 560.82) :z (meters 486.94) :w 1.0000)
+          :vertex-count 22
+          :vertex (new 'static 'inline-array nav-vertex 22
+            (new 'static 'nav-vertex :x (meters 11.9364) :y (meters 0.0) :z (meters 10.0157) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -12.7657) :y (meters 0.0) :z (meters 2.9651) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -12.7657) :y (meters 0.0) :z (meters -38.5172) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -12.7657) :y (meters 0.0) :z (meters -7.3399) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 11.9478) :y (meters 0.0) :z (meters -7.3743) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -4.2332) :y (meters 0.0) :z (meters 10.0157) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 21.1786) :y (meters 0.0) :z (meters 10.0157) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 21.1786) :y (meters 0.0) :z (meters -7.5568) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -4.2332) :y (meters 0.0) :z (meters -7.3743) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -5.3836) :y (meters 0.0) :z (meters 10.0157) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -48.3486) :y (meters 0.0) :z (meters 2.9651) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -12.7657) :y (meters 0.0) :z (meters 1.6174) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 11.9478) :y (meters 0.0) :z (meters 1.6397) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 28.7916) :y (meters 0.0) :z (meters 10.0157) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 4.7585) :y (meters 0.0) :z (meters 10.0157) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 4.7585) :y (meters 0.0) :z (meters -7.3743) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -48.3486) :y (meters 0.0) :z (meters -38.5172) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 28.7916) :y (meters 0.0) :z (meters 19.9489) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -5.3836) :y (meters 0.0) :z (meters 19.9489) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 21.1786) :y (meters 0.0) :z (meters 1.6397) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters -4.2332) :y (meters 0.0) :z (meters 1.6174) :w 1.0000)
+            (new 'static 'nav-vertex :x (meters 4.7585) :y (meters 0.0) :z (meters 1.6174) :w 1.0000))
+          :poly-count 22
+          :poly (new 'static 'inline-array nav-poly 22
+            (new 'static 'nav-poly
+            :id #x0
+            :vertex (new 'static 'array uint8 3 #x13 #x4 #xc)
+            :adj-poly (new 'static 'array uint8 3 #x8 #x14 #x7)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x1
+            :vertex (new 'static 'array uint8 3 #xa #x1 #xb)
+            :adj-poly (new 'static 'array uint8 3 #xff #xff #x9)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x2
+            :vertex (new 'static 'array uint8 3 #x15 #x8 #x14)
+            :adj-poly (new 'static 'array uint8 3 #xc #x5 #x4)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x3
+            :vertex (new 'static 'array uint8 3 #xe #x5 #x12)
+            :adj-poly (new 'static 'array uint8 3 #x12 #xd #x11)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x4
+            :vertex (new 'static 'array uint8 3 #x14 #xe #x15)
+            :adj-poly (new 'static 'array uint8 3 #x12 #xff #x2)
+            :pat 1)
+            (new 'static 'nav-poly
+            :id #x5
+            :vertex (new 'static 'array uint8 3 #x3 #x14 #x8)
+            :adj-poly (new 'static 'array uint8 3 #x13 #x2 #xff)
+            :pat 1)
+            (new 'static 'nav-poly
+            :id #x6
+            :vertex (new 'static 'array uint8 3 #x15 #x4 #xf)
+            :adj-poly (new 'static 'array uint8 3 #x14 #xff #xc)
+            :pat 1)
+            (new 'static 'nav-poly
+            :id #x7
+            :vertex (new 'static 'array uint8 3 #xc #x6 #x13)
+            :adj-poly (new 'static 'array uint8 3 #x15 #xff #x0)
+            :pat 1)
+            (new 'static 'nav-poly
+            :id #x8
+            :vertex (new 'static 'array uint8 3 #x13 #x7 #x4)
+            :adj-poly (new 'static 'array uint8 3 #xff #xff #x0)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x9
+            :vertex (new 'static 'array uint8 3 #xb #x3 #xa)
+            :adj-poly (new 'static 'array uint8 3 #x13 #xb #x1)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #xa
+            :vertex (new 'static 'array uint8 3 #x3 #x2 #x10)
+            :adj-poly (new 'static 'array uint8 3 #xff #xff #xb)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #xb
+            :vertex (new 'static 'array uint8 3 #xa #x3 #x10)
+            :adj-poly (new 'static 'array uint8 3 #x9 #xa #xff)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #xc
+            :vertex (new 'static 'array uint8 3 #x15 #xf #x8)
+            :adj-poly (new 'static 'array uint8 3 #x6 #xff #x2)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #xd
+            :vertex (new 'static 'array uint8 3 #x5 #x9 #x12)
+            :adj-poly (new 'static 'array uint8 3 #xff #xff #x3)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #xe
+            :vertex (new 'static 'array uint8 3 #x12 #x11 #x0)
+            :adj-poly (new 'static 'array uint8 3 #xff #x10 #x11)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #xf
+            :vertex (new 'static 'array uint8 3 #x11 #xd #x6)
+            :adj-poly (new 'static 'array uint8 3 #xff #xff #x10)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x10
+            :vertex (new 'static 'array uint8 3 #x6 #x0 #x11)
+            :adj-poly (new 'static 'array uint8 3 #x15 #xe #xf)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x11
+            :vertex (new 'static 'array uint8 3 #x0 #xe #x12)
+            :adj-poly (new 'static 'array uint8 3 #xff #x3 #xe)
+            :pat 0)
+            (new 'static 'nav-poly
+            :id #x12
+            :vertex (new 'static 'array uint8 3 #x14 #x5 #xe)
+            :adj-poly (new 'static 'array uint8 3 #xff #x3 #x4)
+            :pat 1)
+            (new 'static 'nav-poly
+            :id #x13
+            :vertex (new 'static 'array uint8 3 #x3 #xb #x14)
+            :adj-poly (new 'static 'array uint8 3 #x9 #xff #x5)
+            :pat 1)
+            (new 'static 'nav-poly
+            :id #x14
+            :vertex (new 'static 'array uint8 3 #x15 #xc #x4)
+            :adj-poly (new 'static 'array uint8 3 #xff #x0 #x6)
+            :pat 1)
+            (new 'static 'nav-poly
+            :id #x15
+            :vertex (new 'static 'array uint8 3 #xc #x0 #x6)
+            :adj-poly (new 'static 'array uint8 3 #xff #x10 #x7)
+            :pat 1))
+          :route (new 'static 'inline-array vector4ub 31
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x57 #xd5 #x57 #xa5)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x5a #xeb #xaa #xea)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xaa #xaa #xaa #xb4)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xf #x54 #x2b #x68)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x0 #xc #x8 #xc0)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xea #x83 #x3a #xab)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xaa #x2 #xb0 #x1a)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xd7 #x15 #x50 #x55)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x5d #xa8 #x3a #xa8)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xb #xa8 #xb3 #xa2)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xae #x2a #x0 #xea)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xab #xaa #xab #xaa)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xaa #xca #x0 #xc0)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xd #x0 #xc #xaa)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xaa #xfa #xaa #xaa)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xa #x0 #xc0 #xf)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x0 #x0 #xb8 #x3a)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xa8 #x2b #xa8 #xa0)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xae #xaa #xea #xaa)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xaa #xa9 #x5a #xa9)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x7a #xaf #xa5 #xaa)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xaa #xaa #xbe #xaa)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x40 #x1 #x0 #xf4)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x17 #x6c #x5d #x69)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x55 #xeb #x95 #xea)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xab #xaa #x56 #xb5)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #x26 #xea #xea #xa0)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xaa #xae #xab #x7a)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xa9 #x5a #xa9 #xa7)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xa6 #xae #x6a #x75)) 
+            (new 'static 'vector4ub :data (new 'static 'array uint8 4 #xe9 #x0 #x0 #x0)))))
+      (entity-nav-login this))
+      ))
 
 (defmethod birth! ((this entity-actor))
   "Create a process for this entity and start it."

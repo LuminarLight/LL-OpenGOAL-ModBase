@@ -2587,6 +2587,25 @@
              :lev0 'lltest2
              :disp0 'display
              :lev1 #f
+             :disp1 #f)
+       (new 'static
+             'continue-point
+             :name "lltest2-farside"
+             :level 'lltest2
+             :trans
+             (new 'static 'vector :x (meters 20.3621) :y (meters 557.0839) :z (meters 422.859) :w 1.0)
+             :quat
+             (new 'static 'quaternion :y 0.0296 :w 0.9981)
+             :camera-trans
+             (new 'static 'vector :x 21.1896 :y 561.3439 :z 413.8536 :w 1.0)
+             :camera-rot
+             (new 'static 'array float 9 0.9959 -0.0000 0.0897 -0.0150 0.9858 0.1672 -0.0884 -0.1679 0.9818)
+             :load-commands
+             '()
+             :vis-nick 'lt2
+             :lev0 'lltest2
+             :disp0 'display
+             :lev1 #f
              :disp1 #f))
        :tasks
        '()
