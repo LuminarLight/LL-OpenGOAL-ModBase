@@ -75,11 +75,12 @@ jobs:
 
   # Upload the Artifacts
   upload_artifacts:
+    # if: github.repository == 'open-goal/jak-project'
     needs:
       - cut_release
       - build_windows_clang
       - build_linux_clang
-      # - build_macos_intel
+      - build_macos_intel
     name: "Upload Artifacts"
     runs-on: ubuntu-latest
     steps:
