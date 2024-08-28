@@ -190,7 +190,8 @@ void playMP3_internal(u32 filePathu32, u32 volume, bool isMainMusic) {
   std::thread thread([=]() {
     std::string filePath = Ptr<String>(filePathu32).c()->data();
     std::string fullFilePath = fs::path(file_util::get_jak_project_dir() / "custom_assets" /
-                                    game_version_names[g_game_version] / "audio" / filePath).string();
+                                        game_version_names[g_game_version] / "audio" / filePath)
+                                   .string();
 
     if (maSoundMap.contains(filePath)) {
       std::cout << "File is already playing, stopping first: " << filePath << std::endl;
@@ -203,7 +204,7 @@ void playMP3_internal(u32 filePathu32, u32 volume, bool isMainMusic) {
     MiniAudioLib::ma_sound sound;
 
     result = MiniAudioLib::ma_sound_init_from_file(&maEngine, fullFilePath.c_str(), 0, NULL, NULL,
-                                                    &sound);
+                                                   &sound);
 
     if (result != MiniAudioLib::MA_SUCCESS) {
       std::cout << "Failed to load: " << filePath << std::endl;
@@ -221,7 +222,7 @@ void playMP3_internal(u32 filePathu32, u32 volume, bool isMainMusic) {
 
     MiniAudioLib::ma_sound_start(&sound);
 
-  if (!isMainMusic) {
+    if (!isMainMusic) {
       std::lock_guard<std::mutex> lock(activeMusicsMutex);
       maSoundMap.insert(std::make_pair(filePath, sound));
     }
@@ -235,7 +236,7 @@ void playMP3_internal(u32 filePathu32, u32 volume, bool isMainMusic) {
     MiniAudioLib::ma_sound_uninit(&sound);
     std::cout << "Finished playing file: " << filePath << std::endl;
 
-  if (!isMainMusic) {
+    if (!isMainMusic) {
       std::lock_guard<std::mutex> lock(activeMusicsMutex);
       maSoundMap.erase(filePath);
     }
