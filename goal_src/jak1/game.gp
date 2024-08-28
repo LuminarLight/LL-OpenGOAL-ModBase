@@ -2002,7 +2002,9 @@
 
  :deps
  ("$OUT/obj/main.o"
-  "$OUT/obj/video.o")
+  "$OUT/obj/video.o"
+  "$OUT/obj/navmesh-data.o"
+  )
 
  "collide/collide-cache.gc"
  "entity/relocate.gc"
@@ -2116,6 +2118,7 @@
 (goal-src "pc/debug/default-menu-pc.gc" "anim-tester-x" "part-tester" "entity-debug")
 (goal-src "pc/debug/pc-debug-common.gc" "pckernel-impl" "entity-h" "game-info-h" "level-h" "settings-h" "gsound-h" "target-util")
 (goal-src "pc/debug/pc-debug-methods.gc" "pc-debug-common")
+(goal-src "pc/modbase/navmesh-data.gc")
 (goal-src "levels/test-zone/test-zone-obs.gc" "process-drawable")
 
 (group-list "all-code"
