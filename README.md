@@ -115,6 +115,8 @@ While you may think that forking this mod base is preferable, keep in mind that 
 
 Here is a guide for duplicating the repo: https://docs.github.com/en/repositories/creating-and-managing-repositories/duplicating-a-repository
 
+For convenience, please ensure that your main branch is called `master`. This is important if you want the GitHub workflows to just work easily.
+
 Once your repository exists, you should add this mod base as a remote. This will allow you to stay up to date:
 
 ```
