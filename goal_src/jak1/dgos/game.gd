@@ -267,6 +267,7 @@
   "collide-cache.o"
   "relocate.o"
   "memory-usage.o"
+  "custom-navmesh-data.o"
   "entity.o"
   "path.o"
   "vol.o"
