@@ -7,7 +7,7 @@
 (require "engine/draw/drawable-actor-h.gc")
 (require "engine/common-obs/process-drawable.gc")
 (require "engine/entity/entity-table.gc")
-(require "pc/modbase/navmesh-data.gc")
+(require "pc/ll-modbase/custom-navmesh-data.gc")
 
 ;; DECOMP BEGINS
 
@@ -823,7 +823,7 @@
   `(or ,@(apply (lambda (x) `(begin (define-extern ,x type) (type-type? (-> this etype) ,x))) types)))
 
 (defun custom-nav-mesh-check-and-setup ((this entity-actor))
-  (check-navmeshes-for-lltest2 this))
+  (check-custom-navmeshes-of-lltest2 this))
 
 (defmethod birth! ((this entity-actor))
   "Create a process for this entity and start it."

@@ -2588,7 +2588,7 @@
              :disp0 'display
              :lev1 #f
              :disp1 #f)
-       (new 'static
+        (new 'static
              'continue-point
              :name "lltest2-farside"
              :level 'lltest2

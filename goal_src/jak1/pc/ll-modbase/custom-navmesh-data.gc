@@ -1,6 +1,8 @@
 ;;-*-Lisp-*-
 (in-package goal)
-(defun check-navmeshes-for-lltest2 ((this entity-actor))
+
+;; Please do not touch this function, it will lead to conflicts. Add your new navmeshes into their own separate functions, and call it in 'custom-nav-mesh-check-and-setup' in entity.gc
+(defun check-custom-navmeshes-of-lltest2 ((this entity-actor))
   (case (-> this aid)
     ((40000) ;; lltest2-babak-1
      (set! (-> this nav-mesh)
