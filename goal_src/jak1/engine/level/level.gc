@@ -825,7 +825,7 @@
 (#cond
   (PC_PORT
    (defconstant LEVEL_HEAP_SIZE (* 10416 1024)) ;; 10.416K
-   (defconstant LEVEL_HEAP_SIZE_DEBUG (* 11000 1024)))
+   (defconstant LEVEL_HEAP_SIZE_DEBUG (* 11000 1024 4)))
   (#t
    (defconstant LEVEL_HEAP_SIZE (* 10416 1024)) ;; 10.416K
    (defconstant LEVEL_HEAP_SIZE_DEBUG (* 25600 1024)) ;; 25.600K
