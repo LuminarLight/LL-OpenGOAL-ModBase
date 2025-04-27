@@ -30,7 +30,7 @@
 #include "game/system/hid/input_manager.h"
 #include "game/system/hid/sdl_util.h"
 
-#include "fmt/core.h"
+#include "fmt/format.h"
 #include "third-party/SDL/include/SDL3/SDL.h"
 #include "third-party/SDL/include/SDL3/SDL_hints.h"
 #include "third-party/SDL/include/SDL3/SDL_version.h"
@@ -349,6 +349,17 @@ GLDisplay::GLDisplay(SDL_Window* window, SDL_GLContext gl_context, bool is_main)
   m_input_manager->register_command(
       CommandBinding::Source::KEYBOARD,
       CommandBinding(SDLK_F2, [&]() { m_take_screenshot_next_frame = true; }));
+
+  const auto& bind = Gfx::g_debug_settings.toggle_fullscreen_key;
+
+  m_input_manager->register_command(
+      CommandBinding::Source::KEYBOARD,
+      CommandBinding(bind.key, bind.modifiers, [&](const SDL_Event& event) {
+        if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0 &&
+            bind.modifiers.has_necessary_modifiers(SDL_GetModState())) {
+          m_display_manager->toggle_display_mode();
+        }
+      }));
 }
 
 GLDisplay::~GLDisplay() {
