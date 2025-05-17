@@ -820,6 +820,8 @@
     (go process-drawable-art-error (the-as string s4-0)))
   (none))
 
+(define *force-launcher-active* #f)
+
 (deftype launcher (process-drawable)
   ((root            collide-shape :override)
    (spring-height   meters)
@@ -1190,6 +1192,7 @@
         (('trans) (move-to-point! (-> self root) (the-as vector (-> block param 0))) (update-transforms! (-> self root)))))
   :trans
     (behavior ()
+      (if *force-launcher-active* (go launcher-active))
       (when (and *target* (>= (-> self active-distance) (vector-vector-distance (-> self root trans) (-> *target* control trans))))
         (cond
           ((send-event *target* 'query 'powerup (pickup-type eco-blue)) (go launcher-active))
@@ -1225,7 +1228,7 @@
       (if (or (or (not *target*)
                   (< (-> self active-distance) (vector-vector-distance (-> self root trans) (-> *target* control trans))))
               (not (send-event *target* 'query 'powerup (pickup-type eco-blue))))
-        (go launcher-idle))
+        (if (not *force-launcher-active*) (go launcher-idle)))
       (spawn (-> self part) (-> self root trans))
       (sound-play "launch-idle" :id (-> self sound-id))
       (if (and (and *target*
@@ -1257,9 +1260,12 @@
   (set! (-> this active-distance) 409600.0)
   (set! (-> this spring-height) (res-lump-float arg0 'spring-height :default 163840.0))
   (let ((s4-1 (res-lump-value arg0 'mode uint128)))
-    (let ((v1-18 (-> this entity extra level name)))
+    (let ((v1-18 (-> this entity extra level name))
+          (part-override (res-lump-struct arg0 'part-override symbol)))
       (set! (-> this part)
             (create-launch-control (cond
+                                     ((= part-override 'beach) (-> *part-group-id-table* 37))
+                                     ((= part-override 'swamp) (-> *part-group-id-table* 39))
                                      ((= v1-18 'beach) (-> *part-group-id-table* 37))
                                      ((= v1-18 'swamp) (-> *part-group-id-table* 39))
                                      (else (-> *part-group-id-table* 38)))
@@ -1295,9 +1301,12 @@
   (update-transforms! (-> self root))
   (set! (-> self spring-height) arg1)
   (set! (-> self active-distance) arg3)
-  (let ((v1-23 (-> self entity extra level name)))
+  (let ((v1-23 (-> self entity extra level name))
+        (part-override (res-lump-struct (-> self entity) 'part-override symbol)))
     (set! (-> self part)
           (create-launch-control (cond
+                                   ((= part-override 'beach) (-> *part-group-id-table* 37))
+                                   ((= part-override 'swamp) (-> *part-group-id-table* 39))
                                    ((= v1-23 'beach) (-> *part-group-id-table* 37))
                                    ((= v1-23 'swamp) (-> *part-group-id-table* 39))
                                    (else (-> *part-group-id-table* 38)))

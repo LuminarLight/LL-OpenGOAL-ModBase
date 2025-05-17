@@ -96,6 +96,8 @@ I am happy if anyone finds this useful. But I have a request: If you learn more 
 - Borrowed a trick from the other mod base (the one by barg and Zed). As you may know, the project dir is found by looking for `jak-project` in the directory path. But if your repository doesn't have that name, it won't be found. They rewrote the function that finds the project directory. But I think it is not working on all platforms yet. I will keep observing their modbase and update this if necessary. What we borrowed for now is working fine on Windows.
 - Improved the debug Nav Mesh display. If you enable 'Nav Mesh Extras', you will see the IDs of the vertexes and the triangles.
 - When you press L2+UP, the HUD now shows the true maximum obtainable number of orbs, flies, and cells instead of the hardcoded values of 2000, 112, and 101.
+- Now you can override which particle a `launcher` should use, using the `part-override` lump (symbol type) - if not specified, or the value you provided does not meet any conditions in the code, then it will continue evaluating the particle choice like vanilla.
+- Added a `*force-launcher-active*` global symbol, to allow forcing all `launcher`s to be active regardless of Jak distance or blue eco status. Useful for checking the particles.
 
 ---
 
