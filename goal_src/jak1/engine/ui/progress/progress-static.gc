@@ -1406,4 +1406,5 @@
 ;; goes down by 24 or 23 every time
 (define *task-egg-starting-x* (new 'static 'boxed-array :type int32 218 194 171 147 124 100 77 53 30))
 
-;(define *game-counts* (the-as game-count-info #f))
+;; Seems to work better with a malloc. Increase size if needed.
+(define *game-counts* (the-as game-count-info (malloc 'global 1000)))

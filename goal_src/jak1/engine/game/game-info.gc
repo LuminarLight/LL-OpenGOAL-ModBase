@@ -138,16 +138,16 @@
   "Get the permanent storage for a game-task"
   (-> this task-perm-list data arg0))
 
-(define *game-counts* (the-as game-count-info #f))
+;; Added by LL modbase, needed below.
+(define-extern *game-counts* game-count-info)
 
 (defmethod initialize! ((this game-info) (cause symbol) (save-to-load game-save) (continue-point-override string))
   "Initialize the game-info.
     The cause can be 'dead if you die, or 'game to reset everything.
     If save-to-load is not #f will load data from that.
     If continue-point-override is not #f, will use that."
-  ;; Custom game counts here. Example:
-  ;; (set! (-> *game-counts* data 16 money-count) 150)
-  ;; (set! (-> *game-counts* data 16 buzzer-count) 7)
+
+  ;; Calculate values for custom properties in game-info, used for HUD collectible counts.
   (let ((total-cells 0)
         (total-buzzers 0)
         (total-orbs 0))
@@ -160,6 +160,7 @@
     (set! (-> this total-nb-of-fuel-cells) total-cells)
     (set! (-> this total-nb-of-buzzers) total-buzzers)
     (set! (-> this total-nb-of-orbs) total-orbs))
+
   (local-vars (v0-0 int) (sv-96 symbol))
   (case cause
     (('dead)
