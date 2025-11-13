@@ -340,12 +340,16 @@ GLDisplay::GLDisplay(SDL_Window* window, SDL_GLContext gl_context, bool is_main)
   m_main = is_main;
   m_display_manager->set_input_manager(m_input_manager);
   // Register commands
-  m_input_manager->register_command(CommandBinding::Source::KEYBOARD,
-                                    CommandBinding(Gfx::g_debug_settings.hide_imgui_key, [&]() {
-                                      if (!Gfx::g_debug_settings.ignore_hide_imgui) {
-                                        set_imgui_visible(!is_imgui_visible());
-                                      }
-                                    }));
+  m_input_manager->register_command(
+      CommandBinding::Source::KEYBOARD,
+      CommandBinding(Gfx::g_debug_settings.hide_imgui_key, [&](const SDL_Event& event) {
+        if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
+          if (!Gfx::g_debug_settings.ignore_hide_imgui) {
+            set_imgui_visible(!is_imgui_visible());
+          }
+        }
+      }));
+  ;
   m_input_manager->register_command(
       CommandBinding::Source::KEYBOARD,
       CommandBinding(SDLK_F2, [&]() { m_take_screenshot_next_frame = true; }));
@@ -373,6 +377,14 @@ GLDisplay::~GLDisplay() {
   // Cleanup SDL
   SDL_GL_DestroyContext(m_gl_context);
   SDL_DestroyWindow(m_window);
+  // cleanup SDL related sub-systems before we quit SDL
+  if (m_display_manager) {
+    m_display_manager.reset();
+  }
+  if (m_input_manager) {
+    m_input_manager.reset();
+  }
+  // now quit SDL
   SDL_Quit();
   if (m_main) {
     gl_exit();
@@ -386,6 +398,8 @@ void render_game_frame(int game_width,
                        int draw_region_width,
                        int draw_region_height,
                        int msaa_samples,
+                       int brightness_contrast_color,
+                       int brightness_contrast_alpha,
                        bool take_screenshot) {
   // wait for a copied chain.
   bool got_chain = false;
@@ -407,6 +421,8 @@ void render_game_frame(int game_width,
     options.draw_region_width = draw_region_width;
     options.draw_region_height = draw_region_height;
     options.msaa_samples = msaa_samples;
+    options.brightness_contrast_color = brightness_contrast_color;
+    options.brightness_contrast_alpha = brightness_contrast_alpha;
     options.draw_render_debug_window = g_gfx_data->debug_gui.should_draw_render_debug();
     options.draw_profiler_window = g_gfx_data->debug_gui.should_draw_profiler();
     options.draw_loader_window = g_gfx_data->debug_gui.should_draw_loader_menu();
@@ -560,6 +576,8 @@ void GLDisplay::render() {
     render_game_frame(
         game_res_w, game_res_h, fbuf_w, fbuf_h, Gfx::g_global_settings.lbox_w,
         Gfx::g_global_settings.lbox_h, Gfx::g_global_settings.msaa_samples,
+        Gfx::g_global_settings.brightness_contrast_color,
+        Gfx::g_global_settings.brightness_contrast_alpha,
         m_take_screenshot_next_frame && g_gfx_data->debug_gui.screenshot_hotkey_enabled);
     // If we took a screenshot, stop taking them now!
     if (m_take_screenshot_next_frame) {

@@ -36,8 +36,8 @@ namespace MiniAudioLib {
 #include "common/log/log.h"
 #include "common/symbols.h"
 #include "common/util/FileUtil.h"
-#include "common/util/FontUtils.h"
 #include "common/util/Timer.h"
+#include "common/util/font/font_utils.h"
 #include "common/util/string_util.h"
 
 #include "game/external/discord.h"
@@ -919,19 +919,19 @@ u32 pc_get_display_mode() {
   }
 }
 
-void pc_set_display_mode(u32 symptr) {
+void pc_set_display_mode(u32 symptr, u64 window_width, u64 window_height) {
   if (!Display::GetMainDisplay()) {
     return;
   }
   if (symptr == g_pc_port_funcs.intern_from_c("windowed").offset || symptr == s7.offset) {
     Display::GetMainDisplay()->get_display_manager()->enqueue_set_window_display_mode(
-        game_settings::DisplaySettings::DisplayMode::Windowed);
+        game_settings::DisplaySettings::DisplayMode::Windowed, window_width, window_height);
   } else if (symptr == g_pc_port_funcs.intern_from_c("borderless").offset) {
     Display::GetMainDisplay()->get_display_manager()->enqueue_set_window_display_mode(
-        game_settings::DisplaySettings::DisplayMode::Borderless);
+        game_settings::DisplaySettings::DisplayMode::Borderless, window_width, window_height);
   } else if (symptr == g_pc_port_funcs.intern_from_c("fullscreen").offset) {
     Display::GetMainDisplay()->get_display_manager()->enqueue_set_window_display_mode(
-        game_settings::DisplaySettings::DisplayMode::Fullscreen);
+        game_settings::DisplaySettings::DisplayMode::Fullscreen, window_width, window_height);
   }
 }
 
@@ -1226,6 +1226,22 @@ void pc_set_pressure_sensitivity_enabled(u32 val) {
   }
 }
 
+void pc_set_axis_scale(u32 val) {
+  if (Display::GetMainDisplay()) {
+    // wow dangerous i guess
+    Display::GetMainDisplay()->get_input_manager()->set_axis_scale(*((float*)&val));
+  }
+}
+
+u32 pc_get_axis_scale() {
+  float out = 1.33f;
+  if (Display::GetMainDisplay()) {
+    out = Display::GetMainDisplay()->get_input_manager()->axis_scale();
+  }
+  // wow dangerous i guess
+  return *((u32*)&out);
+}
+
 u64 pc_current_controller_has_pressure_sensitivity() {
   if (Display::GetMainDisplay()) {
     return bool_to_symbol(
@@ -1321,6 +1337,11 @@ void pc_set_game_resolution(int w, int h) {
 void pc_set_letterbox(int w, int h) {
   Gfx::g_global_settings.lbox_w = w;
   Gfx::g_global_settings.lbox_h = h;
+}
+
+void pc_set_brightness_contrast(s32 color, s32 alpha) {
+  Gfx::g_global_settings.brightness_contrast_color = color;
+  Gfx::g_global_settings.brightness_contrast_alpha = alpha;
 }
 
 void pc_renderer_tree_set_lod(Gfx::RendererTreeType tree, int lod) {
@@ -1496,6 +1517,8 @@ void init_common_pc_port_functions(
                         (void*)pc_get_pressure_sensitivity_enabled);
   make_func_symbol_func("pc-set-pressure-sensitivity-enabled!",
                         (void*)pc_set_pressure_sensitivity_enabled);
+  make_func_symbol_func("pc-set-axis-scale!", (void*)pc_set_axis_scale);
+  make_func_symbol_func("pc-get-axis-scale", (void*)pc_get_axis_scale);
   make_func_symbol_func("pc-current-controller-has-pressure-sensitivity?",
                         (void*)pc_current_controller_has_pressure_sensitivity);
   make_func_symbol_func("pc-current-controller-has-trigger-effect-support?",
@@ -1513,6 +1536,7 @@ void init_common_pc_port_functions(
   make_func_symbol_func("pc-set-msaa", (void*)pc_set_msaa);
   make_func_symbol_func("pc-set-frame-rate", (void*)pc_set_frame_rate);
   make_func_symbol_func("pc-set-game-resolution", (void*)pc_set_game_resolution);
+  make_func_symbol_func("pc-set-brightness-contrast", (void*)pc_set_brightness_contrast);
   make_func_symbol_func("pc-set-letterbox", (void*)pc_set_letterbox);
   make_func_symbol_func("pc-renderer-tree-set-lod", (void*)pc_renderer_tree_set_lod);
   make_func_symbol_func("pc-set-collision-mode", (void*)Gfx::CollisionRendererSetMode);
