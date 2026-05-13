@@ -1067,6 +1067,11 @@ const std::unordered_map<
                 ArrayFieldDecompMeta(TypeSpec("uint64"),
                                      8,
                                      ArrayFieldDecompMeta::Kind::REF_TO_INTEGER_ARR)}}},
+         }},
+        {GameVersion::JakX,
+         {
+             {"lightning-probe-vars",
+              {{"probe-dirs", ArrayFieldDecompMeta(TypeSpec("vector"), 16)}}},
          }}};
 
 goos::Object decompile_structure(const TypeSpec& type,
