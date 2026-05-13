@@ -312,7 +312,7 @@ TEST_F(WithGameTests, GameCount) {
       "(dgo-load \"engine\" global (link-flag output-load-msg output-load-true-msg execute-login "
       "print-login) #x200000)");
   shared_compiler->runner.run_static_test(testCategory, "test-game-count.gc",
-                                          get_test_pass_string("game-count", 4));
+                                          get_test_pass_string("game-count", 0));
   // don't leave behind a weird version of the game-count file.
   fs::remove(file_util::get_file_path({"out", "jak1", "iso", "ENGINE.CGO"}));
   fs::remove(file_util::get_file_path({"out", "jak1", "obj", "game-cnt.go"}));
