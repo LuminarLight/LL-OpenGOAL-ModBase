@@ -249,8 +249,15 @@ void playMP3_internal(u32 filePathu32, u32 volume, bool isMainMusic) {
     MiniAudioLib::ma_result result;
     MiniAudioLib::ma_sound sound;
 
+#ifdef _WIN32
+    // Make music able to be found on Windows even if user folder has weird characters.
+    std::wstring fullFilePathW = fs::path(fullFilePath).wstring();
+    result = MiniAudioLib::ma_sound_init_from_file_w(&maEngine, fullFilePathW.c_str(), 0, NULL,
+                                                    NULL, &sound);
+#else
     result = MiniAudioLib::ma_sound_init_from_file(&maEngine, fullFilePath.c_str(), 0, NULL, NULL,
                                                    &sound);
+#endif
 
     if (result != MiniAudioLib::MA_SUCCESS) {
       std::cout << "Failed to load: " << filePath << std::endl;
@@ -444,7 +451,14 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
     MiniAudioLib::ma_result result;
     MiniAudioLib::ma_sound sound;
 
+    // Make music able to be found on Windows even if user folder has weird characters.
+#ifdef _WIN32
+    std::wstring fileW = fs::path(file).wstring();
+    result = MiniAudioLib::ma_sound_init_from_file_w(&maEngine, fileW.c_str(), 0, NULL, NULL,
+                                                    &sound);
+#else
     result = MiniAudioLib::ma_sound_init_from_file(&maEngine, file.c_str(), 0, NULL, NULL, &sound);
+#endif
     if (result != MiniAudioLib::MA_SUCCESS) {
       std::cout << "Failed to load: " << file << std::endl;
       return;
