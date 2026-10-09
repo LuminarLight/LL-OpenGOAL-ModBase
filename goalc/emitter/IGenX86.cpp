@@ -148,6 +148,7 @@ InstructionX86 load8s_gpr64_gpr64_plus_gpr64_plus_s8(Register dst,
                                                      Register addr1,
                                                      Register addr2,
                                                      s64 offset) {
+  // movsx r64, byte ptr [base + index + disp8]
   ASSERT(dst.is_gpr(instr_set));
   ASSERT(addr1.is_gpr(instr_set));
   ASSERT(addr2.is_gpr(instr_set));
@@ -798,7 +799,7 @@ InstructionX86 load_goal_gpr(Register dst,
   }
 }
 
-InstructionX86 store32_xmm32_gpr64_plus_gpr64(Register addr1, Register addr2, Register xmm_value) {
+InstructionX86 store32_simd32_gpr64_plus_gpr64(Register addr1, Register addr2, Register xmm_value) {
   ASSERT(xmm_value.is_xmm(instr_set));
   ASSERT(addr1.is_gpr(instr_set));
   ASSERT(addr2.is_gpr(instr_set));
@@ -813,7 +814,7 @@ InstructionX86 store32_xmm32_gpr64_plus_gpr64(Register addr1, Register addr2, Re
   return instr;
 }
 
-InstructionX86 load32_xmm32_gpr64_plus_gpr64(Register simd_dest, Register addr1, Register addr2) {
+InstructionX86 load32_simd32_gpr64_plus_gpr64(Register simd_dest, Register addr1, Register addr2) {
   ASSERT(simd_dest.is_xmm(instr_set));
   ASSERT(addr1.is_gpr(instr_set));
   ASSERT(addr2.is_gpr(instr_set));
@@ -828,10 +829,10 @@ InstructionX86 load32_xmm32_gpr64_plus_gpr64(Register simd_dest, Register addr1,
   return instr;
 }
 
-InstructionX86 store32_xmm32_gpr64_plus_gpr64_plus_s8(Register addr1,
-                                                      Register addr2,
-                                                      Register xmm_value,
-                                                      s64 offset) {
+InstructionX86 store32_simd32_gpr64_plus_gpr64_plus_s8(Register addr1,
+                                                       Register addr2,
+                                                       Register xmm_value,
+                                                       s64 offset) {
   ASSERT(xmm_value.is_xmm(instr_set));
   ASSERT(addr1.is_gpr(instr_set));
   ASSERT(addr2.is_gpr(instr_set));
@@ -847,10 +848,10 @@ InstructionX86 store32_xmm32_gpr64_plus_gpr64_plus_s8(Register addr1,
   return instr;
 }
 
-InstructionX86 load32_xmm32_gpr64_plus_gpr64_plus_s8(Register simd_dest,
-                                                     Register addr1,
-                                                     Register addr2,
-                                                     s64 offset) {
+InstructionX86 load32_simd32_gpr64_plus_gpr64_plus_s8(Register simd_dest,
+                                                      Register addr1,
+                                                      Register addr2,
+                                                      s64 offset) {
   ASSERT(simd_dest.is_xmm(instr_set));
   ASSERT(addr1.is_gpr(instr_set));
   ASSERT(addr2.is_gpr(instr_set));
@@ -866,10 +867,10 @@ InstructionX86 load32_xmm32_gpr64_plus_gpr64_plus_s8(Register simd_dest,
   return instr;
 }
 
-InstructionX86 store32_xmm32_gpr64_plus_gpr64_plus_s32(Register addr1,
-                                                       Register addr2,
-                                                       Register xmm_value,
-                                                       s64 offset) {
+InstructionX86 store32_simd32_gpr64_plus_gpr64_plus_s32(Register addr1,
+                                                        Register addr2,
+                                                        Register xmm_value,
+                                                        s64 offset) {
   ASSERT(xmm_value.is_xmm(instr_set));
   ASSERT(addr1.is_gpr(instr_set));
   ASSERT(addr2.is_gpr(instr_set));
@@ -916,7 +917,7 @@ InstructionX86 lea_reg_plus_off(Register dest, Register base, s64 offset) {
   }
 }
 
-InstructionX86 store32_xmm32_gpr64_plus_s32(Register base, Register xmm_value, s64 offset) {
+InstructionX86 store32_simd32_gpr64_plus_s32(Register base, Register xmm_value, s64 offset) {
   ASSERT(xmm_value.is_xmm(instr_set));
   ASSERT(base.is_gpr(instr_set));
   ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
@@ -930,7 +931,7 @@ InstructionX86 store32_xmm32_gpr64_plus_s32(Register base, Register xmm_value, s
   return instr;
 }
 
-InstructionX86 store32_xmm32_gpr64_plus_s8(Register base, Register xmm_value, s64 offset) {
+InstructionX86 store32_simd32_gpr64_plus_s8(Register base, Register xmm_value, s64 offset) {
   ASSERT(xmm_value.is_xmm(instr_set));
   ASSERT(base.is_gpr(instr_set));
   ASSERT(offset >= INT8_MIN && offset <= INT8_MAX);
@@ -944,10 +945,10 @@ InstructionX86 store32_xmm32_gpr64_plus_s8(Register base, Register xmm_value, s6
   return instr;
 }
 
-InstructionX86 load32_xmm32_gpr64_plus_gpr64_plus_s32(Register simd_dest,
-                                                      Register addr1,
-                                                      Register addr2,
-                                                      s64 offset) {
+InstructionX86 load32_simd32_gpr64_plus_gpr64_plus_s32(Register simd_dest,
+                                                       Register addr1,
+                                                       Register addr2,
+                                                       s64 offset) {
   ASSERT(simd_dest.is_xmm(instr_set));
   ASSERT(addr1.is_gpr(instr_set));
   ASSERT(addr2.is_gpr(instr_set));
@@ -963,7 +964,7 @@ InstructionX86 load32_xmm32_gpr64_plus_gpr64_plus_s32(Register simd_dest,
   return instr;
 }
 
-InstructionX86 load32_xmm32_gpr64_plus_s32(Register simd_dest, Register base, s64 offset) {
+InstructionX86 load32_simd32_gpr64_plus_s32(Register simd_dest, Register base, s64 offset) {
   ASSERT(simd_dest.is_xmm(instr_set));
   ASSERT(base.is_gpr(instr_set));
   ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
@@ -977,7 +978,7 @@ InstructionX86 load32_xmm32_gpr64_plus_s32(Register simd_dest, Register base, s6
   return instr;
 }
 
-InstructionX86 load32_xmm32_gpr64_plus_s8(Register simd_dest, Register base, s64 offset) {
+InstructionX86 load32_simd32_gpr64_plus_s8(Register simd_dest, Register base, s64 offset) {
   ASSERT(simd_dest.is_xmm(instr_set));
   ASSERT(base.is_gpr(instr_set));
   ASSERT(offset >= INT8_MIN && offset <= INT8_MAX);
@@ -991,52 +992,52 @@ InstructionX86 load32_xmm32_gpr64_plus_s8(Register simd_dest, Register base, s64
   return instr;
 }
 
-InstructionX86 load_goal_xmm32(Register simd_dest, Register addr, Register off, s64 offset) {
+InstructionX86 load_goal_simd32(Register simd_dest, Register addr, Register off, s64 offset) {
   if (offset == 0) {
-    return load32_xmm32_gpr64_plus_gpr64(simd_dest, addr, off);
+    return load32_simd32_gpr64_plus_gpr64(simd_dest, addr, off);
   } else if (offset >= INT8_MIN && offset <= INT8_MAX) {
-    return load32_xmm32_gpr64_plus_gpr64_plus_s8(simd_dest, addr, off, offset);
+    return load32_simd32_gpr64_plus_gpr64_plus_s8(simd_dest, addr, off, offset);
   } else if (offset >= INT32_MIN && offset <= INT32_MAX) {
-    return load32_xmm32_gpr64_plus_gpr64_plus_s32(simd_dest, addr, off, offset);
+    return load32_simd32_gpr64_plus_gpr64_plus_s32(simd_dest, addr, off, offset);
   } else {
     ASSERT(false);
     return {0};
   }
 }
 
-InstructionX86 store_goal_xmm32(Register addr, Register xmm_value, Register off, s64 offset) {
+InstructionX86 store_goal_simd32(Register addr, Register xmm_value, Register off, s64 offset) {
   if (offset == 0) {
-    return store32_xmm32_gpr64_plus_gpr64(addr, off, xmm_value);
+    return store32_simd32_gpr64_plus_gpr64(addr, off, xmm_value);
   } else if (offset >= INT8_MIN && offset <= INT8_MAX) {
-    return store32_xmm32_gpr64_plus_gpr64_plus_s8(addr, off, xmm_value, offset);
+    return store32_simd32_gpr64_plus_gpr64_plus_s8(addr, off, xmm_value, offset);
   } else if (offset >= INT32_MIN && offset <= INT32_MAX) {
-    return store32_xmm32_gpr64_plus_gpr64_plus_s32(addr, off, xmm_value, offset);
+    return store32_simd32_gpr64_plus_gpr64_plus_s32(addr, off, xmm_value, offset);
   } else {
     ASSERT(false);
     return {0};
   }
 }
 
-InstructionX86 store_reg_offset_xmm32(Register base, Register xmm_value, s64 offset) {
+InstructionX86 store_reg_offset_simd32(Register base, Register xmm_value, s64 offset) {
   ASSERT(base.is_gpr(instr_set));
   ASSERT(xmm_value.is_xmm(instr_set));
   if (offset >= INT8_MIN && offset <= INT8_MAX) {
-    return store32_xmm32_gpr64_plus_s8(base, xmm_value, offset);
+    return store32_simd32_gpr64_plus_s8(base, xmm_value, offset);
   } else if (offset >= INT32_MIN && offset <= INT32_MAX) {
-    return store32_xmm32_gpr64_plus_s32(base, xmm_value, offset);
+    return store32_simd32_gpr64_plus_s32(base, xmm_value, offset);
   } else {
     ASSERT(false);
     return {0};
   }
 }
 
-InstructionX86 load_reg_offset_xmm32(Register simd_dest, Register base, s64 offset) {
+InstructionX86 load_reg_offset_simd32(Register simd_dest, Register base, s64 offset) {
   ASSERT(base.is_gpr(instr_set));
   ASSERT(simd_dest.is_xmm(instr_set));
   if (offset >= INT8_MIN && offset <= INT8_MAX) {
-    return load32_xmm32_gpr64_plus_s8(simd_dest, base, offset);
+    return load32_simd32_gpr64_plus_s8(simd_dest, base, offset);
   } else if (offset >= INT32_MIN && offset <= INT32_MAX) {
-    return load32_xmm32_gpr64_plus_s32(simd_dest, base, offset);
+    return load32_simd32_gpr64_plus_s32(simd_dest, base, offset);
   } else {
     ASSERT(false);
     return {0};
@@ -1129,7 +1130,7 @@ InstructionX86 load128_simd128_gpr64_s8(Register simd_dest, Register gpr_addr, s
   return instr;
 }
 
-InstructionX86 load128_xmm128_reg_offset(Register simd_dest, Register base, s64 offset) {
+InstructionX86 load128_simd128_reg_offset(Register simd_dest, Register base, s64 offset) {
   if (offset == 0) {
     return load128_simd128_gpr64(simd_dest, base);
   } else if (offset >= INT8_MIN && offset <= INT8_MAX) {
@@ -1142,7 +1143,7 @@ InstructionX86 load128_xmm128_reg_offset(Register simd_dest, Register base, s64 
   }
 }
 
-InstructionX86 store128_xmm128_reg_offset(Register base, Register xmm_val, s64 offset) {
+InstructionX86 store128_simd128_reg_offset(Register base, Register xmm_val, s64 offset) {
   if (offset == 0) {
     return store128_gpr64_simd128(base, xmm_val);
   } else if (offset >= INT8_MIN && offset <= INT8_MAX) {
@@ -1248,7 +1249,6 @@ InstructionX86 static_load(Register dest, s64 offset, int size, bool sign_extend
 InstructionX86 store64_pcRel_s32(Register src, s64 offset) {
   ASSERT(src.is_gpr(instr_set));
   ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
-  ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
   InstructionX86 instr(0x89);
   instr.set_modrm_and_rex_for_rip_plus_s32(src.hw_id(instr_set), offset, true);
   return instr;
@@ -1257,7 +1257,6 @@ InstructionX86 store64_pcRel_s32(Register src, s64 offset) {
 InstructionX86 store32_pcRel_s32(Register src, s64 offset) {
   ASSERT(src.is_gpr(instr_set));
   ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
-  ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
   InstructionX86 instr(0x89);
   instr.set_modrm_and_rex_for_rip_plus_s32(src.hw_id(instr_set), offset, false);
   return instr;
@@ -1265,7 +1264,6 @@ InstructionX86 store32_pcRel_s32(Register src, s64 offset) {
 
 InstructionX86 store16_pcRel_s32(Register src, s64 offset) {
   ASSERT(src.is_gpr(instr_set));
-  ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
   ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
   InstructionX86 instr(0x66);
   instr.set_op2(0x89);
@@ -1277,7 +1275,6 @@ InstructionX86 store16_pcRel_s32(Register src, s64 offset) {
 InstructionX86 store8_pcRel_s32(Register src, s64 offset) {
   ASSERT(src.is_gpr(instr_set));
   ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
-  ASSERT(offset >= INT32_MIN && offset <= INT32_MAX);
   InstructionX86 instr(0x88);
   instr.set_modrm_and_rex_for_rip_plus_s32(src.hw_id(instr_set), offset, false);
   if (src.id() > RBX) {
@@ -1286,6 +1283,8 @@ InstructionX86 store8_pcRel_s32(Register src, s64 offset) {
   return instr;
 }
 
+// NOTE - doesn't seem like our code even calls this, just implemented for completness (only the
+// store f32 is ever used, and only in tests...)
 InstructionX86 static_store(Register value, s64 offset, int size) {
   switch (size) {
     case 1:
@@ -1453,7 +1452,7 @@ InstructionX86 add_gpr64_imm(Register reg, int64_t imm) {
   } else if (imm >= INT32_MIN && imm <= INT32_MAX) {
     return add_gpr64_imm32s(reg, imm);
   } else {
-    throw std::runtime_error("Invalid `add` with reg[" + reg.print() + "]/imm[" +
+    throw std::runtime_error("Invalid `add` with reg[" + reg.print(instr_set) + "]/imm[" +
                              std::to_string(imm) + "]");
   }
 }
@@ -1464,7 +1463,7 @@ InstructionX86 sub_gpr64_imm(Register reg, int64_t imm) {
   } else if (imm >= INT32_MIN && imm <= INT32_MAX) {
     return sub_gpr64_imm32s(reg, imm);
   } else {
-    throw std::runtime_error("Invalid `sub` with reg[" + reg.print() + "]/imm[" +
+    throw std::runtime_error("Invalid `sub` with reg[" + reg.print(instr_set) + "]/imm[" +
                              std::to_string(imm) + "]");
   }
 }
@@ -1806,6 +1805,13 @@ InstructionX86 nop() {
   return instr;
 }
 
+//! Emit UD2 because INT3 is reserved for debugger breakpoints.
+InstructionX86 trap() {
+  InstructionX86 instr(0x0f);
+  instr.set_op2(0x0b);
+  return instr;
+}
+
 InstructionX86 null() {
   InstructionX86 i(0);
   i.m_flags |= InstructionX86::kIsNull;
@@ -1890,7 +1896,7 @@ InstructionX86 loadvf_gpr64_plus_gpr64_plus_s32(Register dst,
   return instr;
 }
 
-InstructionX86 load_goal_xmm128(Register dst, Register addr, Register off, int offset) {
+InstructionX86 load_goal_simd128(Register dst, Register addr, Register off, int offset) {
   if (offset == 0) {
     return loadvf_gpr64_plus_gpr64(dst, addr, off);
   } else if (offset >= INT8_MIN && offset <= INT8_MAX) {

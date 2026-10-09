@@ -1,4 +1,4 @@
-name: 🧪 Offline Tests
+name: Tests
 
 on:
   push:
@@ -18,9 +18,10 @@ concurrency:
 
 jobs:
   validate-author:
-    name: Verify Permissions
+    name: Verify Offline Test Permissions
     runs-on: self-hosted
-    if: github.repository == 'open-goal/jak-project'
+    if: github.repository == 'open-goal/jak-project' &&
+        (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
     timeout-minutes: 5
     outputs:
       trusted: ${{ steps.verify.outputs.trusted }}
@@ -35,6 +36,7 @@ jobs:
           COMMENT_ID: ${{ github.event.comment.user.id }}
           COMMENT: ${{ github.event.comment.body }}
           PR_NUMBER: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
 
@@ -69,6 +71,7 @@ jobs:
             SHA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER --jq '.head.sha')
             if [ "$COMMENT" = "ok to test" ] && grep -Fxq "$COMMENT_ID" ./.tmp-ci/allowlist.txt; then
               is_trusted=true
+              gh pr comment "${{ github.event.issue.number }}" --body "Offline tests running: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             fi
           fi
 
@@ -77,7 +80,7 @@ jobs:
 
           rm -rf ./.tmp-ci
   offline-tests:
-    name: Run Tests
+    name: 🧪 Run Offline Tests
     needs: validate-author
     if: needs.validate-author.outputs.trusted == 'true' && github.repository == 'open-goal/jak-project'
     runs-on: self-hosted
