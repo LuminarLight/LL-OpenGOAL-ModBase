@@ -424,13 +424,13 @@ void stop_tfl_music(bool force) {
     g_tfl_music = NULL;
     mainMusicMutex.unlock();
 
-    jak1::intern_from_c("*tfl-music-playing?*")->value = offset_of_s7();
+    jak1::intern_from_c("*custom-music-playing?*")->value = offset_of_s7();
     // delete g_tfl_music;
   }
 }
 
-u32 play_tfl_music(u32 file_name, u32 volume) {
-  /*auto music_is_playing = jak1::intern_from_c("*tfl-music-playing?*")->value ==
+u32 play_custom_music(u32 file_name, u32 volume) {
+  /*auto music_is_playing = jak1::intern_from_c("*custom-music-playing?*")->value ==
                           offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
   if (music_is_playing) {
     printf("TFL music is already playing!\n");
@@ -477,10 +477,10 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
     printf("Playing music: %s (volume %f)\n", name_str.c_str(), vol);
     MiniAudioLib::ma_sound_set_volume(g_tfl_music, 0.f);
     MiniAudioLib::ma_sound_set_looping(g_tfl_music, MA_TRUE);
-    auto volume = jak1::call_goal_function_by_name("tfl-music-player-volume");
+    auto volume = jak1::call_goal_function_by_name("custom-music-player-volume");
     MiniAudioLib::ma_sound_set_fade_in_milliseconds(g_tfl_music, 0, vol / 100.0, fade_length);
     MiniAudioLib::ma_sound_start(g_tfl_music);
-    jak1::intern_from_c("*tfl-music-playing?*")->value =
+    jak1::intern_from_c("*custom-music-playing?*")->value =
         offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
 
     auto paused_func = [](MiniAudioLib::ma_sound* music) {
@@ -508,9 +508,9 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
 
           return;
         }
-        auto stop = jak1::intern_from_c("*tfl-music-stop*")->value;
+        auto stop = jak1::intern_from_c("*custom-music-stop*")->value;
         if (stop == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
-          jak1::intern_from_c("*tfl-music-stop*")->value = offset_of_s7();
+          jak1::intern_from_c("*custom-music-stop*")->value = offset_of_s7();
           // stop_tfl_music(false);
           //  delete g_tfl_music;
           // std::terminate();
@@ -525,7 +525,7 @@ u32 play_tfl_music(u32 file_name, u32 volume) {
           }
         }
         float vol;
-        auto volume = jak1::call_goal_function_by_name("tfl-music-player-volume");
+        auto volume = jak1::call_goal_function_by_name("custom-music-player-volume");
         memcpy(&vol, &volume, 4);
         MiniAudioLib::ma_sound_set_volume(&sound, vol / 100.0);
         auto paused = jak1::call_goal_function_by_name("paused?");
@@ -1671,7 +1671,7 @@ void init_common_pc_port_functions(
 
   // TFL note: added
   // make_func_symbol_func("play-tfl-hint", (void*)play_tfl_hint);
-  make_func_symbol_func("play-tfl-music", (void*)play_tfl_music);
+  make_func_symbol_func("play-custom-music", (void*)play_custom_music);
 
   // discord rich presence
   make_func_symbol_func("pc-discord-rpc-set", (void*)set_discord_rpc);

@@ -367,8 +367,8 @@
     (blerc-init)
     ;; collide dma
     (suspend)
-    ;; TFL note: added music player
-    (process-spawn tfl-music-player)
+    ;; custom music
+    (process-spawn custom-music-player)
     (while *run*
       ;; start immediately after all process updates finish.
       (profiler-instant-event "display-loop-top")

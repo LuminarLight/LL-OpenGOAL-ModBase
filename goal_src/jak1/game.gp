@@ -1980,16 +1980,16 @@
 
 (goal-src "engine/common-obs/generic-obs.gc" "pc-anim-util" "assert")
 
-;; TFL note: added
-(goal-src "levels/tfl_common/tfl-music-player.gc" "level")
+;; custom music
+(goal-src "pc/ll-modbase/custom-music-player.gc" "level")
 
 (goal-src-sequence
  ;; prefix
  "engine/"
 
  :deps
-  ;; TFL note: added music player dep
- ("$OUT/obj/generic-obs.o" "$OUT/obj/tfl-music-player.o")
+  ;; custom music player dep
+ ("$OUT/obj/generic-obs.o" "$OUT/obj/custom-music-player.o")
  "target/target-util.gc"
  "target/target-part.gc"
  "target/collide-reaction-target.gc"

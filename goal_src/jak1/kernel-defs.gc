@@ -588,7 +588,7 @@
 ;; TFL note: added
 (define-extern play-tfl-hint (function string float symbol symbol))
 
-(define-extern play-tfl-music (function string float symbol))
+(define-extern play-custom-music (function string float symbol))
 
 (define-extern play-sound-file (function string int none))
 
