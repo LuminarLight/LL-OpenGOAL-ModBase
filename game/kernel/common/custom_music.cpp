@@ -100,20 +100,20 @@ struct CustomMusicSet {
   int current_variant = -1;
   bool warned_variant = false;
   std::chrono::steady_clock::time_point last_sync_check;
-  std::chrono::steady_clock::time_point fade_deadline;  // used when dying
+  std::chrono::steady_clock::time_point fade_deadline;
 };
 
-static constexpr int kCustomMusicFadeMs = 1000;  // set start and stop fade
+static constexpr int kCustomMusicFadeMs = 1000;
 
 static std::mutex g_custom_music_mutex;
-static std::unique_ptr<CustomMusicSet> g_custom_music_active;              // playing or about to
-static std::vector<std::unique_ptr<CustomMusicSet>> g_custom_music_dying;  // fading out
+static std::unique_ptr<CustomMusicSet> g_custom_music_active;
+static std::vector<std::unique_ptr<CustomMusicSet>> g_custom_music_dying;
 static std::atomic<u64> g_custom_music_request{0};  // bumped on every start/stop
-static std::atomic<int> g_custom_music_loaders{0};  // running loader threads
+static std::atomic<int> g_custom_music_loaders{0};
 static std::atomic<bool> g_custom_music_shutdown{false};
-static std::atomic<float> g_custom_music_volume{1.0f};  // last volume pushed from GOAL, 0-1
-static std::atomic<int> g_custom_music_variant{0};      // last variant pushed from GOAL
-static std::string g_custom_music_failed_name;          // do not retry this name
+static std::atomic<float> g_custom_music_volume{1.0f};
+static std::atomic<int> g_custom_music_variant{0};
+static std::string g_custom_music_failed_name;
 // engine time (pcm frames) when the last retired set is silent. A new set starts after it,
 // so different music never crossfades.
 static MiniAudioLib::ma_uint64 g_custom_music_silent_at = 0;
@@ -142,7 +142,6 @@ static void set_custom_music_playing_flag(bool playing) {
   sym->value = goal_bool(playing);
 }
 
-// Layers first, group last. Safe to call on a half-loaded set.
 static void custom_music_free_set(CustomMusicSet& set) {
   for (auto& layer : set.layers) {
     if (layer->inited) {
@@ -156,7 +155,7 @@ static void custom_music_free_set(CustomMusicSet& set) {
   }
 }
 
-// Fade the active set out and move it to the dying list. Caller holds g_custom_music_mutex.
+// Caller holds g_custom_music_mutex.
 static void custom_music_retire_active_locked() {
   if (!g_custom_music_active) {
     return;
@@ -190,7 +189,6 @@ static fs::path custom_music_find_legacy_file(const std::string& name) {
   return {};
 }
 
-// Reads <name>.musicset.jsonc, or falls back to a single audio file with one variant.
 static bool custom_music_load_set_def(const std::string& name, CustomMusicSetDef& out) {
   const fs::path set_file = custom_music_dir() / (name + ".musicset.jsonc");
   if (!fs::exists(set_file)) {
@@ -302,7 +300,6 @@ static bool custom_music_load_layers(CustomMusicSet& set) {
   return true;
 }
 
-// One loader thread per request. It never touches GOAL, only the mutex-guarded globals.
 static void custom_music_loader(std::string name, u64 my_request) {
   auto set = std::make_unique<CustomMusicSet>();
   set->name = name;
@@ -313,7 +310,7 @@ static void custom_music_loader(std::string name, u64 my_request) {
   if (!ok || stale) {
     custom_music_free_set(*set);
     if (!ok && !stale) {
-      g_custom_music_failed_name = name;  // do not retry until the symbol changes
+      g_custom_music_failed_name = name;
     }
     g_custom_music_loaders--;
     return;
@@ -342,7 +339,6 @@ static void custom_music_loader(std::string name, u64 my_request) {
   g_custom_music_loaders--;
 }
 
-// Crossfade every layer to its gain in the requested variant. No seek, no restart.
 static void custom_music_apply_variant(CustomMusicSet& set, int variant) {
   const int v = custom_music_clamp_variant(set.def, variant);
   if (v != variant && !set.warned_variant) {
@@ -362,7 +358,6 @@ static void custom_music_apply_variant(CustomMusicSet& set, int variant) {
   set.current_variant = v;
 }
 
-// Re-align layers that drifted from layer 0. Only for fully decoded layers.
 static void custom_music_sync_layers(CustomMusicSet& set,
                                      std::chrono::steady_clock::time_point now) {
   if (set.def.stream || set.paused || set.layers.size() < 2 ||
@@ -441,7 +436,6 @@ u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
     auto apply = [&](CustomMusicSet& set) {
       MiniAudioLib::ma_sound_group_set_volume(&set.group, vol);
       if (set.paused != now_paused) {
-        // stopping the group freezes its layers, starting it resumes them in sync
         if (now_paused) {
           MiniAudioLib::ma_sound_group_stop(&set.group);
         } else {
@@ -459,7 +453,6 @@ u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
     for (auto& dying : g_custom_music_dying) {
       apply(*dying);
     }
-    // free sets whose fade-out is over
     for (auto it = g_custom_music_dying.begin(); it != g_custom_music_dying.end();) {
       if (now >= (*it)->fade_deadline) {
         custom_music_free_set(**it);
@@ -487,7 +480,6 @@ void custom_music_shutdown() {
     }
     g_custom_music_dying.clear();
   }
-  // loader threads see g_custom_music_shutdown and free their own sets, wait briefly for them
   for (int i = 0; i < 200 && g_custom_music_loaders.load() > 0; i++) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
