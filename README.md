@@ -18,13 +18,66 @@ This change is currently only implemented for TPL. It wouldn't make too much sen
 
 ### Custom Music
 
-I borrowed the custom music system from 'The Forgotten Lands' mod, and made some changes to it. As far as I know, the base of that whole system was initially created by Zed, and then it was greatly expanded by Hat-Kid. Please let me know if this is inaccurate and I will adjust this section.
-Later the other modbase found a worthy replacement for SFML, called 'miniaudio', and they let me look at their changes. I implemented these on our side. 
+You can play music files of flac, mp3, wav, or ogg format. Put the files in `custom_assets/jak1/custom_sound/music/`. After that, there are two main ways to play your custom music:
+- Set the `custom-music` property in your level's `level-load-info` to your music's name (symbol).
+- Place a music ambient (sphere) in your level, and set its `custom-music` lump to your music's name (symbol). In this case you don't want to set the `music` lump at all - custom music is not supposed to be used together with base game music.
 
-I implemented a way to use custom music for music ambients. To use it, just use the `custom-music` lump instead of the `music` lump in your music ambient. Also expanded the 3D debug text that is drawn when you are displaying music ambients.
+When a music change is triggered, the old one fades out, and after that the new one fades in (each takes 1 second) - this is similar to how base game music fades in/out.
+I have also expanded the 3D debug text of music ambients, now it shows the following additional properties: `music`, `custom-music`, `flava`.
 
-I made some other minor changes to the custom music system for now, the GOAL side is quite different now but the c++ side is mostly unchanged. For the future I want to make its namings more generic/neutral (so they don't refer to The Forgotten Lands in the name). I also want to implement a way to have music variants/flavors, and I already have a clear vision for it, but I will have to rewrite a lot of code on the c++ side. And while there, I will probably do a general cleanup of that code as well.
-Also, for now, the TFL hints system is not reimplemented, since we switched to miniaudio. It is planned though.
+#### Variants (flava)
+
+You can optionally configure your custom music to support variants (flava). To do this, place a `[music name].musicset.jsonc` file next to your audio files. Here is an example:
+
+```jsonc
+{
+  "variant_fade_ms": 1500, // how long a variant change takes
+  "stream": false,         // true = stream the files instead of loading them into memory
+  "layers": { "base": "coolmusic.flac", "drums": "coolmusic+drums.flac" },
+  // the variant number is the index; variant 0 plays for every event that isn't mapped
+  "variants": [
+    { "base": 1.0 },
+    { "base": 1.0, "drums": 1.0 }
+  ]
+}
+```
+
+- All layers should be exactly the same length. If this is not the case, you will get a warning in the console. MP3 can't guarantee exact lengths, because encoders can add padding, so we recommend using the other formats.
+- A recommended naming convention for layer files is `name+layer.extension`. The `+` character is reserved for layers, so a music name can't contain it.
+- Layer paths are relative to the music folder. Absolute paths and `..` are not allowed.
+- A layer missing from a variant is silent (it gets a default gain of 0.0). This makes configuration easier if you have a lot of layers.
+- Without a `musicset` file, the music plays as a single file, whose name (without extension) must match the music name (for example `coolmusic.flac` for `coolmusic`).
+- Setting `stream` to false loads all layers into memory, instead of streaming them from the storage. This can use a lot of memory, but avoids storage latency. If layers drift apart, they are re-aligned automatically, but only when not streamed.
+- If you are trying to trigger a variant ID that doesn't exist in the music set, it will fall back to 0 and print a warning.
+
+The `variants` are made to work with the base game's flava system. A flava is an event that is active while Jak is somewhere, or doing something - it can be set by music ambients (literally spheres you place in levels), or set directly in code. Each music track has its own interpretation for events, in its own row in `goal_src/jak1/engine/sound/gsound.gc`, at the same place where it is done for base game music:
+
+```lisp
+(flava-table-add coolmusic (corner 1)) ;; while the corner event is active, coolmusic plays variant 1
+```
+
+Events can be set by a music ambient with a `flava` lump:
+
+```jsonc
+"flava": ["enum-uint32", "(music-flava corner)"],
+"priority": ["float", 20.0]  // optional, default is 10.0. The highest priority wins; in case of a tie, the one evaluated last wins
+```
+
+Or in the code with `(set-setting! 'sound-flava #f [priority] (music-flava corner))`.
+
+Different music tracks can map the same event to different variants, so reusing event names is okay. You can add new events to the `music-flava` enum in `goal_src/jak1/engine/sound/gsound-h.gc` (and don't forget to make the same change in `decompiler/config/jak1/all-types.gc`).
+
+You can also map existing events to custom music - for example, the `racer` event is active while Jak is on a Zoomer (its priority is 30.0):
+
+```lisp
+(flava-table-add othermusic (racer 1))
+```
+
+You can see the music `lltest`, implemented/used in the `lltest2` level of this mod base, if you want to see a working example.
+
+#### Credits
+
+The first working custom music system was created by Zed, then it was greatly expanded by Hat-Kid, and then further expanded by barg and Zed. What we have in this modbase today is a significantly reworked and improved version of all of those prior implementations - this is the first implementation that supports variants/flava. Please let me know if this is inaccurate and I will adjust this section.
 
 ---
 
@@ -103,8 +156,6 @@ I am happy if anyone finds this useful. But I have a request: If you learn more 
 
 ## Future Plans
 
-- Implement flavor/variant support for custom music.
-- Make the TFL hints system work again.
 - Clean up GitHub Actions.
 - Understand more about the navmesh system (node, route).
 - Show how to add new `battle` actors, also show the part that needs to be done through code. I have already touched the battle system in the past. I should clear things up and implement an example.
