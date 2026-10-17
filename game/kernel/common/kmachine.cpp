@@ -1,10 +1,15 @@
 #include "kmachine.h"
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <memory>
+#include <mutex>
 #include <random>
 #include <thread>
+#include <vector>
 
 #define MINIAUDIO_IMPLEMENTATION
 // NOTE - this is needed, because on macOS, there is a file called `MacTypes.h`
@@ -408,140 +413,257 @@ u32 play_tfl_hint(u32 file_name, u32 volume, u32 interrupt) {
   return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
 }*/
 
-MiniAudioLib::ma_sound* g_tfl_music;
+// custom music
+// One set of time-synced layers plays at a time. GOAL starts and stops sets and pushes the
+// volume, pause state and variant every frame. Loading runs on a separate thread and never
+// calls into GOAL; everything shared is guarded by g_custom_music_mutex.
+struct CustomMusicLayer {
+  std::string id;
+  MiniAudioLib::ma_sound sound;
+  bool inited = false;
+};
 
-MiniAudioLib::ma_uint64 fade_length = 1000;  // TODO make this get from GOAL side.
+struct CustomMusicSet {
+  std::string name;
+  std::vector<std::unique_ptr<CustomMusicLayer>> layers;
+  MiniAudioLib::ma_sound_group group;
+  bool group_inited = false;
+  bool paused = false;
+  int fade_ms = 1000;
+  int current_variant = -1;  // -1 = not applied yet
+  std::chrono::steady_clock::time_point fade_deadline;  // used when dying
+};
 
-void stop_tfl_music(bool force) {
-  if (g_tfl_music && MiniAudioLib::ma_sound_is_playing(g_tfl_music)) {
-    if (!force) {
-      MiniAudioLib::ma_sound_set_fade_in_milliseconds(g_tfl_music, -1, 0, fade_length);
-      std::this_thread::sleep_for(std::chrono::milliseconds(fade_length));
+static std::mutex g_custom_music_mutex;
+static std::unique_ptr<CustomMusicSet> g_custom_music_active;              // playing or about to
+static std::vector<std::unique_ptr<CustomMusicSet>> g_custom_music_dying;  // fading out
+static std::atomic<u64> g_custom_music_request{0};  // bumped on every start/stop
+static std::atomic<int> g_custom_music_loaders{0};  // running loader threads
+static std::atomic<bool> g_custom_music_shutdown{false};
+static std::atomic<float> g_custom_music_volume{1.0f};  // last volume pushed from GOAL, 0-1
+static std::string g_custom_music_failed_name;           // do not retry this name
+// engine time (pcm frames) when the last retired set is silent. A new set starts after it,
+// so different music never crossfades.
+static MiniAudioLib::ma_uint64 g_custom_music_silent_at = 0;
+
+static fs::path custom_music_dir() {
+  return file_util::get_jak_project_dir() / "custom_assets" / "jak1" / "custom_sound" / "music";
+}
+
+static std::string goal_string(u32 ptr) {
+  return std::string(Ptr<String>(ptr).c()->data());
+}
+
+static float float_from_bits(u32 bits) {
+  float f;
+  memcpy(&f, &bits, 4);
+  return f;
+}
+
+static u32 goal_bool(bool b) {
+  return b ? offset_of_s7() + jak1_symbols::FIX_SYM_TRUE : offset_of_s7();
+}
+
+static void set_custom_music_playing_flag(bool playing) {
+  static auto sym = jak1::intern_from_c("*custom-music-playing?*");
+  sym->value = goal_bool(playing);
+}
+
+// Layers first, group last. Safe to call on a half-loaded set.
+static void custom_music_free_set(CustomMusicSet& set) {
+  for (auto& layer : set.layers) {
+    if (layer->inited) {
+      MiniAudioLib::ma_sound_uninit(&layer->sound);
+      layer->inited = false;
     }
-
-    mainMusicMutex.lock();
-    MiniAudioLib::ma_sound_stop(g_tfl_music);
-    g_tfl_music = NULL;
-    mainMusicMutex.unlock();
-
-    jak1::intern_from_c("*custom-music-playing?*")->value = offset_of_s7();
-    // delete g_tfl_music;
+  }
+  if (set.group_inited) {
+    MiniAudioLib::ma_sound_group_uninit(&set.group);
+    set.group_inited = false;
   }
 }
 
-u32 play_custom_music(u32 file_name, u32 volume) {
-  /*auto music_is_playing = jak1::intern_from_c("*custom-music-playing?*")->value ==
-                          offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
-  if (music_is_playing) {
-    printf("TFL music is already playing!\n");
-    return offset_of_s7();
-  }*/
+// Fade the active set out and move it to the dying list. Caller holds g_custom_music_mutex.
+static void custom_music_retire_active_locked() {
+  if (!g_custom_music_active) {
+    return;
+  }
+  auto& set = *g_custom_music_active;
+  MiniAudioLib::ma_sound_group_set_fade_in_milliseconds(&set.group, -1.0f, 0.0f,
+                                                        (MiniAudioLib::ma_uint64)set.fade_ms);
+  g_custom_music_silent_at =
+      MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
+      (MiniAudioLib::ma_uint64)set.fade_ms * MiniAudioLib::ma_engine_get_sample_rate(&maEngine) /
+          1000;
+  set.fade_deadline =
+      std::chrono::steady_clock::now() + std::chrono::milliseconds(set.fade_ms + 100);
+  g_custom_music_dying.push_back(std::move(g_custom_music_active));
+}
 
-  // stop_tfl_music(true);
-
-  std::thread music_thread([=]() {
-    auto name_str = std::string(Ptr<String>(file_name)->data());
-    std::string file;
-    auto music_dir =
-        file_util::get_jak_project_dir() / "custom_assets" / "jak1" / "custom_sound" / "music";
-    for (const auto& entry : fs::directory_iterator(music_dir)) {
-      // printf("Checking file %s\n",entry.path().string().c_str());
-      if (entry.is_regular_file() && entry.path().stem().string() == name_str) {
-        file = entry.path().string();
-        break;
+// Only audio extensions, so other files with the same stem never match.
+static fs::path custom_music_find_legacy_file(const std::string& name) {
+  static const char* kExts[] = {".flac", ".mp3", ".wav", ".ogg"};
+  std::error_code ec;
+  for (const auto& entry : fs::directory_iterator(custom_music_dir(), ec)) {
+    if (!entry.is_regular_file() || entry.path().stem().string() != name) {
+      continue;
+    }
+    std::string ext = str_util::to_lower(entry.path().extension().string());
+    for (auto* e : kExts) {
+      if (ext == e) {
+        return entry.path();
       }
     }
+  }
+  return {};
+}
 
-    MiniAudioLib::ma_result result;
-    MiniAudioLib::ma_sound sound;
+// One loader thread per request. It never touches GOAL, only the mutex-guarded globals.
+static void custom_music_loader(std::string name, u64 my_request) {
+  auto set = std::make_unique<CustomMusicSet>();
+  set->name = name;
+  bool ok = false;
 
-    // Make music able to be found on Windows even if user folder has weird characters.
+  fs::path file = custom_music_find_legacy_file(name);
+  if (file.empty()) {
+    lg::error("custom music: no file found for '{}'", name);
+  } else if (MiniAudioLib::ma_sound_group_init(&maEngine, 0, nullptr, &set->group) ==
+             MiniAudioLib::MA_SUCCESS) {
+    set->group_inited = true;
+    auto layer = std::make_unique<CustomMusicLayer>();
+    layer->id = "base";
+    MiniAudioLib::ma_result r;
 #ifdef _WIN32
-    std::wstring fileW = fs::path(file).wstring();
-    result =
-        MiniAudioLib::ma_sound_init_from_file_w(&maEngine, fileW.c_str(), 0, NULL, NULL, &sound);
+    // Make music able to be found on Windows even if user folder has weird characters.
+    std::wstring fileW = file.wstring();
+    r = MiniAudioLib::ma_sound_init_from_file_w(&maEngine, fileW.c_str(), 0, &set->group, nullptr,
+                                                &layer->sound);
 #else
-    result = MiniAudioLib::ma_sound_init_from_file(&maEngine, file.c_str(), 0, NULL, NULL, &sound);
+    r = MiniAudioLib::ma_sound_init_from_file(&maEngine, file.string().c_str(), 0, &set->group,
+                                              nullptr, &layer->sound);
 #endif
-    if (result != MiniAudioLib::MA_SUCCESS) {
-      std::cout << "Failed to load: " << file << std::endl;
-      return;
+    if (r == MiniAudioLib::MA_SUCCESS) {
+      layer->inited = true;
+      set->layers.push_back(std::move(layer));
+      ok = true;
+    } else {
+      lg::error("custom music: failed to load {}", file.string());
     }
+  }
 
-    mainMusicMutex.lock();
-    g_tfl_music = &sound;
-    mainMusicMutex.unlock();
+  std::lock_guard<std::mutex> lock(g_custom_music_mutex);
+  const bool stale = g_custom_music_request.load() != my_request || g_custom_music_shutdown.load();
+  if (!ok || stale) {
+    custom_music_free_set(*set);
+    if (!ok && !stale) {
+      g_custom_music_failed_name = name;  // do not retry until the symbol changes
+    }
+    g_custom_music_loaders--;
+    return;
+  }
 
-    float vol;
-    memcpy(&vol, &volume, 4);
-    printf("Playing music: %s (volume %f)\n", name_str.c_str(), vol);
-    MiniAudioLib::ma_sound_set_volume(g_tfl_music, 0.f);
-    MiniAudioLib::ma_sound_set_looping(g_tfl_music, MA_TRUE);
-    auto volume = jak1::call_goal_function_by_name("custom-music-player-volume");
-    MiniAudioLib::ma_sound_set_fade_in_milliseconds(g_tfl_music, 0, vol / 100.0, fade_length);
-    MiniAudioLib::ma_sound_start(g_tfl_music);
-    jak1::intern_from_c("*custom-music-playing?*")->value =
-        offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+  // Start every layer on the same frame, a little in the future (50 ms), and not before the
+  // previous set has faded out.
+  MiniAudioLib::ma_uint64 start = std::max(
+      MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
+          MiniAudioLib::ma_engine_get_sample_rate(&maEngine) / 20,
+      g_custom_music_silent_at);
+  MiniAudioLib::ma_sound_group_set_volume(&set->group, g_custom_music_volume.load());
+  MiniAudioLib::ma_sound_group_start(&set->group);
+  for (auto& layer : set->layers) {
+    MiniAudioLib::ma_sound_set_looping(&layer->sound, MA_TRUE);
+    MiniAudioLib::ma_sound_set_start_time_in_pcm_frames(&layer->sound, start);
+    MiniAudioLib::ma_sound_set_fade_in_milliseconds(&layer->sound, 0.0f, 1.0f,
+                                                    (MiniAudioLib::ma_uint64)set->fade_ms);
+    MiniAudioLib::ma_sound_start(&layer->sound);
+  }
+  lg::info("custom music: playing '{}'", name);
+  g_custom_music_active = std::move(set);
+  g_custom_music_loaders--;
+}
 
-    auto paused_func = [](MiniAudioLib::ma_sound* music) {
-      while (!MiniAudioLib::ma_sound_is_playing(music)) {
-        auto pause = jak1::call_goal_function_by_name("paused?");
-        if (pause == offset_of_s7()) {
-          MiniAudioLib::ma_sound_start(music);
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      }
-    };
-
-    auto play_func = [&sound, &paused_func, file]() {
-      while (MiniAudioLib::ma_sound_is_playing(&sound)) {
-        if (MasterExit != RuntimeExitStatus::RUNNING) {
-          stop_tfl_music(true);
-
-          MiniAudioLib::ma_sound_uninit(&sound);
-          std::cout << "Finished playing file: " << file << std::endl;
-
-          {
-            std::lock_guard<std::mutex> lock(activeMusicsMutex);
-            maSoundMap.erase(file);
-          }
-
-          return;
-        }
-        auto stop = jak1::intern_from_c("*custom-music-stop*")->value;
-        if (stop == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
-          jak1::intern_from_c("*custom-music-stop*")->value = offset_of_s7();
-          // stop_tfl_music(false);
-          //  delete g_tfl_music;
-          // std::terminate();
-
-          stop_tfl_music(false);
-          MiniAudioLib::ma_sound_uninit(&sound);
-          std::cout << "Finished playing file: " << file << std::endl;
-
-          {
-            std::lock_guard<std::mutex> lock(activeMusicsMutex);
-            maSoundMap.erase(file);
-          }
-        }
-        float vol;
-        auto volume = jak1::call_goal_function_by_name("custom-music-player-volume");
-        memcpy(&vol, &volume, 4);
-        MiniAudioLib::ma_sound_set_volume(&sound, vol / 100.0);
-        auto paused = jak1::call_goal_function_by_name("paused?");
-        if (paused == offset_of_s7() + jak1_symbols::FIX_SYM_TRUE) {
-          MiniAudioLib::ma_sound_stop(&sound);
-          paused_func(&sound);
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      }
-    };
-
-    play_func();
-  });
-
-  music_thread.detach();
+u32 play_custom_music(u32 file_name) {
+  std::string name = goal_string(file_name);
+  std::lock_guard<std::mutex> lock(g_custom_music_mutex);
+  if (name == g_custom_music_failed_name) {
+    return offset_of_s7();  // already failed once, the player waits for the symbol to change
+  }
+  g_custom_music_failed_name.clear();
+  custom_music_retire_active_locked();
+  u64 my_request = ++g_custom_music_request;
+  g_custom_music_loaders++;
+  set_custom_music_playing_flag(true);
+  std::thread(custom_music_loader, name, my_request).detach();
   return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+}
+
+u32 stop_custom_music() {
+  std::lock_guard<std::mutex> lock(g_custom_music_mutex);
+  g_custom_music_request++;  // cancels a load that is still running
+  custom_music_retire_active_locked();
+  return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
+}
+
+// Called once per frame from GOAL. volume_bits is a float (0-100) passed as raw bits.
+u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
+  (void)variant;  // used from phase 2
+  const float vol = float_from_bits(volume_bits) / 100.0f;
+  g_custom_music_volume = vol;
+  const bool now_paused = paused != 0;
+  const auto now = std::chrono::steady_clock::now();
+  bool playing;
+  {
+    std::lock_guard<std::mutex> lock(g_custom_music_mutex);
+    auto apply = [&](CustomMusicSet& set) {
+      MiniAudioLib::ma_sound_group_set_volume(&set.group, vol);
+      if (set.paused != now_paused) {
+        // stopping the group freezes its layers, starting it resumes them in sync
+        if (now_paused) {
+          MiniAudioLib::ma_sound_group_stop(&set.group);
+        } else {
+          MiniAudioLib::ma_sound_group_start(&set.group);
+        }
+        set.paused = now_paused;
+      }
+    };
+    if (g_custom_music_active) {
+      apply(*g_custom_music_active);
+    }
+    for (auto& dying : g_custom_music_dying) {
+      apply(*dying);
+    }
+    // free sets whose fade-out is over
+    for (auto it = g_custom_music_dying.begin(); it != g_custom_music_dying.end();) {
+      if (now >= (*it)->fade_deadline) {
+        custom_music_free_set(**it);
+        it = g_custom_music_dying.erase(it);
+      } else {
+        ++it;
+      }
+    }
+    playing = g_custom_music_active != nullptr || g_custom_music_loaders.load() > 0;
+  }
+  set_custom_music_playing_flag(playing);
+  return goal_bool(playing);
+}
+
+void custom_music_shutdown() {
+  g_custom_music_shutdown = true;
+  {
+    std::lock_guard<std::mutex> lock(g_custom_music_mutex);
+    if (g_custom_music_active) {
+      custom_music_free_set(*g_custom_music_active);
+      g_custom_music_active = nullptr;
+    }
+    for (auto& d : g_custom_music_dying) {
+      custom_music_free_set(*d);
+    }
+    g_custom_music_dying.clear();
+  }
+  // loader threads see g_custom_music_shutdown and free their own sets, wait briefly for them
+  for (int i = 0; i < 200 && g_custom_music_loaders.load() > 0; i++) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
 }
 
 // Function to stop the Main Music.
@@ -1672,6 +1794,8 @@ void init_common_pc_port_functions(
   // TFL note: added
   // make_func_symbol_func("play-tfl-hint", (void*)play_tfl_hint);
   make_func_symbol_func("play-custom-music", (void*)play_custom_music);
+  make_func_symbol_func("stop-custom-music", (void*)stop_custom_music);
+  make_func_symbol_func("custom-music-update", (void*)custom_music_update);
 
   // discord rich presence
   make_func_symbol_func("pc-discord-rpc-set", (void*)set_discord_rpc);

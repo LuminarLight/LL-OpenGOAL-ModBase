@@ -4,8 +4,6 @@
 ;; (see README for credits).
 (define *custom-music-playing?* #f)
 
-(define *custom-music-stop* #f)
-
 (deftype custom-music-player (process)
   ((stored-music symbol))
   (:methods
@@ -19,9 +17,6 @@
 
 (define *custom-music-player* (the (pointer custom-music-player) #f))
 
-(defun custom-music-player-volume ()
-  (-> *setting-control* current music-volume))
-
 (defmethod set-stored-music! ((this custom-music-player))
   (set! (-> this stored-music) (-> *setting-control* default custom-music))
   (none))
@@ -34,18 +29,17 @@
 (defmethod play! ((this custom-music-player))
   (when (is-there-music? this)
     (if *custom-music-playing?* (stop! this))
-    (play-custom-music (symbol->string (-> this stored-music)) (custom-music-player-volume)))
+    (play-custom-music (symbol->string (-> this stored-music))))
   (none))
 
 (defmethod stop! ((this custom-music-player))
   (when *custom-music-playing?*
-    (true! *custom-music-stop*))
+    (stop-custom-music))
   (none))
 
 (defmethod deactivate ((this custom-music-player))
   (stop! this)
   (false! *custom-music-playing?*)
-  (false! *custom-music-stop*)
   (set! *custom-music-player* (the (pointer custom-music-player) #f))
   (call-parent-method this))
 

@@ -165,3 +165,5 @@
    (year   uint8)))
 
 (define-extern *setting-control* setting-control)
+
+(define *custom-music-variant* 0) ;; variant number of the current custom music, from the flava table (0 = default variant)

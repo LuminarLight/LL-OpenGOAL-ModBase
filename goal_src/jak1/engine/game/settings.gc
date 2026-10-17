@@ -192,6 +192,9 @@
            (sound-music-load (string->sound-name (symbol->string (-> s5-1 music)))))
           (else (format 0 "Unload music~%") (sound-music-unload)))
         (set! (-> gp-0 music) (-> s5-1 music)))
+      ;; custom music: same lookup as base music below, but keyed by the custom music symbol.
+      ;; The result is a variant number: 0 = default variant, also when there is no row.
+      (set! *custom-music-variant* (flava-lookup (-> s5-1 custom-music) (the-as music-flava (-> s5-1 sound-flava))))
       ;; set sound flava
       (set! (-> s5-1 sound-flava) (the-as uint (flava-lookup (-> gp-0 music) (the-as music-flava (-> s5-1 sound-flava)))))
       (set! (-> gp-0 sound-flava) (-> s5-1 sound-flava))

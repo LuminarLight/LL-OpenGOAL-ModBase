@@ -407,6 +407,8 @@
                   (collect-ambients (-> v1-32 bsp) s5-1 0 (-> (scratchpad-object terrain-context) work ambient ambient-list)))))
             (countdown (s4-2 (-> (scratchpad-object terrain-context) work ambient ambient-list num-items))
               (execute-ambient (-> (scratchpad-object terrain-context) work ambient ambient-list items s4-2) s5-1)))))
+      ;; custom music: push music state to the manager (runs on the GOAL thread)
+      (custom-music-update (-> *setting-control* current music-volume) (if (paused?) 1 0) *custom-music-variant*)
       (add-ee-profile-frame 'draw :r #x40 :b #x40) ;; actor update
       ;; do math, before drawing
       (with-profiler "math-engine"
