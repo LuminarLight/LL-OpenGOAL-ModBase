@@ -270,7 +270,7 @@
     (set! (-> gp-0 spooling) (the-as (pointer process) #f))
     (set! (-> gp-0 hint) (the-as (pointer process) #f))
     (set! (-> gp-0 ambient) (the-as (pointer process) #f))
-    (set! (-> gp-0 sound-flava) (the-as uint 49))
+    (set! (-> gp-0 sound-flava) (the-as uint (music-flava default))) ;; modbase: was (the-as uint 49)
     (set! (-> gp-0 sound-flava-priority) 0.0)
     (set! (-> gp-0 music) #f)
     (set! (-> gp-0 bg-a-speed) 8.0)

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <memory>
 #include <mutex>
 #include <random>
@@ -41,6 +42,7 @@ namespace MiniAudioLib {
 #include "common/util/FileUtil.h"
 #include "common/util/Timer.h"
 #include "common/util/font/font_utils.h"
+#include "common/util/json_util.h"
 #include "common/util/string_util.h"
 
 #include "game/external/discord.h"
@@ -198,6 +200,18 @@ u64 CPadOpen(u64 cpad_info, s32 pad_number) {
 // One set of time-synced layers plays at a time. GOAL starts and stops sets and pushes the
 // volume, pause state and variant every frame. Loading runs on a separate thread and never
 // calls into GOAL; everything shared is guarded by g_custom_music_mutex.
+struct CustomMusicLayerDef {
+  std::string id;
+  std::string path;  // relative to the music dir
+};
+
+struct CustomMusicSetDef {
+  int variant_fade_ms = 1500;
+  bool stream = false;
+  std::vector<CustomMusicLayerDef> layers;
+  std::vector<std::vector<float>> variants;  // variants[v][i] = gain of layers[i] in variant v
+};
+
 struct CustomMusicLayer {
   std::string id;
   MiniAudioLib::ma_sound sound;
@@ -206,14 +220,18 @@ struct CustomMusicLayer {
 
 struct CustomMusicSet {
   std::string name;
+  CustomMusicSetDef def;
   std::vector<std::unique_ptr<CustomMusicLayer>> layers;
   MiniAudioLib::ma_sound_group group;
   bool group_inited = false;
   bool paused = false;
-  int fade_ms = 1000;
-  int current_variant = -1;  // -1 = not applied yet
+  int current_variant = -1;
+  bool warned_variant = false;
+  std::chrono::steady_clock::time_point last_sync_check;
   std::chrono::steady_clock::time_point fade_deadline;  // used when dying
 };
+
+static constexpr int kCustomMusicFadeMs = 1000;  // set start and stop fade
 
 static std::mutex g_custom_music_mutex;
 static std::unique_ptr<CustomMusicSet> g_custom_music_active;              // playing or about to
@@ -222,7 +240,8 @@ static std::atomic<u64> g_custom_music_request{0};  // bumped on every start/sto
 static std::atomic<int> g_custom_music_loaders{0};  // running loader threads
 static std::atomic<bool> g_custom_music_shutdown{false};
 static std::atomic<float> g_custom_music_volume{1.0f};  // last volume pushed from GOAL, 0-1
-static std::string g_custom_music_failed_name;           // do not retry this name
+static std::atomic<int> g_custom_music_variant{0};      // last variant pushed from GOAL
+static std::string g_custom_music_failed_name;          // do not retry this name
 // engine time (pcm frames) when the last retired set is silent. A new set starts after it,
 // so different music never crossfades.
 static MiniAudioLib::ma_uint64 g_custom_music_silent_at = 0;
@@ -270,14 +289,13 @@ static void custom_music_retire_active_locked() {
     return;
   }
   auto& set = *g_custom_music_active;
-  MiniAudioLib::ma_sound_group_set_fade_in_milliseconds(&set.group, -1.0f, 0.0f,
-                                                        (MiniAudioLib::ma_uint64)set.fade_ms);
-  g_custom_music_silent_at =
-      MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
-      (MiniAudioLib::ma_uint64)set.fade_ms * MiniAudioLib::ma_engine_get_sample_rate(&maEngine) /
-          1000;
+  MiniAudioLib::ma_sound_group_set_fade_in_milliseconds(
+      &set.group, -1.0f, 0.0f, (MiniAudioLib::ma_uint64)kCustomMusicFadeMs);
+  g_custom_music_silent_at = MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
+                             (MiniAudioLib::ma_uint64)kCustomMusicFadeMs *
+                                 MiniAudioLib::ma_engine_get_sample_rate(&maEngine) / 1000;
   set.fade_deadline =
-      std::chrono::steady_clock::now() + std::chrono::milliseconds(set.fade_ms + 100);
+      std::chrono::steady_clock::now() + std::chrono::milliseconds(kCustomMusicFadeMs + 100);
   g_custom_music_dying.push_back(std::move(g_custom_music_active));
 }
 
@@ -299,38 +317,123 @@ static fs::path custom_music_find_legacy_file(const std::string& name) {
   return {};
 }
 
+// Reads <name>.musicset.jsonc, or falls back to a single audio file with one variant.
+static bool custom_music_load_set_def(const std::string& name, CustomMusicSetDef& out) {
+  const fs::path set_file = custom_music_dir() / (name + ".musicset.jsonc");
+  if (!fs::exists(set_file)) {
+    fs::path legacy = custom_music_find_legacy_file(name);
+    if (legacy.empty()) {
+      lg::error("custom music: no set file or audio file for '{}'", name);
+      return false;
+    }
+    out.layers.push_back({"base", legacy.filename().string()});
+    out.variants.push_back({1.0f});
+    return true;
+  }
+
+  try {
+    auto j = parse_commented_json(file_util::read_text_file(set_file), set_file.string());
+    out.variant_fade_ms = j.value("variant_fade_ms", 1500);
+    out.stream = j.value("stream", false);
+
+    // nlohmann sorts object keys, so layers are in alphabetical order. Gains are looked up by id.
+    const auto& layers = j.at("layers");
+    for (auto it = layers.begin(); it != layers.end(); ++it) {
+      std::string rel = it.value().get<std::string>();
+      if (fs::path(rel).is_absolute() || rel.find("..") != std::string::npos) {
+        lg::error("custom music '{}': layer path '{}' must be relative and without ..", name, rel);
+        return false;
+      }
+      if (!fs::exists(custom_music_dir() / rel)) {
+        lg::error("custom music '{}': missing layer file '{}'", name, rel);
+        return false;
+      }
+      out.layers.push_back({it.key(), rel});
+    }
+    if (out.layers.empty()) {
+      lg::error("custom music '{}': no layers", name);
+      return false;
+    }
+
+    const auto& variants = j.at("variants");
+    if (!variants.is_array() || variants.empty()) {
+      lg::error("custom music '{}': variants must be a non-empty array", name);
+      return false;
+    }
+    for (const auto& v : variants) {
+      for (auto it = v.begin(); it != v.end(); ++it) {
+        if (std::none_of(out.layers.begin(), out.layers.end(),
+                         [&](const CustomMusicLayerDef& l) { return l.id == it.key(); })) {
+          lg::warn("custom music '{}': variant uses unknown layer '{}'", name, it.key());
+        }
+      }
+      std::vector<float> gains;
+      for (const auto& layer : out.layers) {
+        gains.push_back(v.value(layer.id, 0.0f));
+      }
+      out.variants.push_back(std::move(gains));
+    }
+  } catch (const std::exception& e) {
+    lg::error("custom music '{}': cannot read set file: {}", name, e.what());
+    return false;
+  }
+  return true;
+}
+
+static int custom_music_clamp_variant(const CustomMusicSetDef& def, int variant) {
+  return (variant >= 0 && variant < (int)def.variants.size()) ? variant : 0;
+}
+
+static bool custom_music_load_layers(CustomMusicSet& set) {
+  if (MiniAudioLib::ma_sound_group_init(&maEngine, 0, nullptr, &set.group) !=
+      MiniAudioLib::MA_SUCCESS) {
+    lg::error("custom music '{}': failed to create sound group", set.name);
+    return false;
+  }
+  set.group_inited = true;
+  const MiniAudioLib::ma_uint32 flags = set.def.stream ? MiniAudioLib::MA_SOUND_FLAG_STREAM : 0;
+  for (const auto& ld : set.def.layers) {
+    auto layer = std::make_unique<CustomMusicLayer>();
+    layer->id = ld.id;
+    fs::path full = custom_music_dir() / ld.path;
+#ifdef _WIN32
+    // Make music able to be found on Windows even if user folder has weird characters.
+    std::wstring fullW = full.wstring();
+    auto r = MiniAudioLib::ma_sound_init_from_file_w(&maEngine, fullW.c_str(), flags, &set.group,
+                                                     nullptr, &layer->sound);
+#else
+    auto r = MiniAudioLib::ma_sound_init_from_file(&maEngine, full.string().c_str(), flags,
+                                                   &set.group, nullptr, &layer->sound);
+#endif
+    if (r != MiniAudioLib::MA_SUCCESS) {
+      lg::error("custom music '{}': failed to load layer '{}' ({})", set.name, ld.id,
+                full.string());
+      return false;
+    }
+    layer->inited = true;
+    set.layers.push_back(std::move(layer));
+  }
+
+  if (set.layers.size() > 1) {
+    MiniAudioLib::ma_uint64 len0 = 0;
+    MiniAudioLib::ma_sound_get_length_in_pcm_frames(&set.layers[0]->sound, &len0);
+    for (size_t i = 1; i < set.layers.size(); i++) {
+      MiniAudioLib::ma_uint64 len = 0;
+      MiniAudioLib::ma_sound_get_length_in_pcm_frames(&set.layers[i]->sound, &len);
+      if ((len > len0 ? len - len0 : len0 - len) > 48) {
+        lg::warn("custom music '{}': layer '{}' length differs from '{}', layers will drift",
+                 set.name, set.layers[i]->id, set.layers[0]->id);
+      }
+    }
+  }
+  return true;
+}
+
 // One loader thread per request. It never touches GOAL, only the mutex-guarded globals.
 static void custom_music_loader(std::string name, u64 my_request) {
   auto set = std::make_unique<CustomMusicSet>();
   set->name = name;
-  bool ok = false;
-
-  fs::path file = custom_music_find_legacy_file(name);
-  if (file.empty()) {
-    lg::error("custom music: no file found for '{}'", name);
-  } else if (MiniAudioLib::ma_sound_group_init(&maEngine, 0, nullptr, &set->group) ==
-             MiniAudioLib::MA_SUCCESS) {
-    set->group_inited = true;
-    auto layer = std::make_unique<CustomMusicLayer>();
-    layer->id = "base";
-    MiniAudioLib::ma_result r;
-#ifdef _WIN32
-    // Make music able to be found on Windows even if user folder has weird characters.
-    std::wstring fileW = file.wstring();
-    r = MiniAudioLib::ma_sound_init_from_file_w(&maEngine, fileW.c_str(), 0, &set->group, nullptr,
-                                                &layer->sound);
-#else
-    r = MiniAudioLib::ma_sound_init_from_file(&maEngine, file.string().c_str(), 0, &set->group,
-                                              nullptr, &layer->sound);
-#endif
-    if (r == MiniAudioLib::MA_SUCCESS) {
-      layer->inited = true;
-      set->layers.push_back(std::move(layer));
-      ok = true;
-    } else {
-      lg::error("custom music: failed to load {}", file.string());
-    }
-  }
+  bool ok = custom_music_load_set_def(name, set->def) && custom_music_load_layers(*set);
 
   std::lock_guard<std::mutex> lock(g_custom_music_mutex);
   const bool stale = g_custom_music_request.load() != my_request || g_custom_music_shutdown.load();
@@ -345,26 +448,90 @@ static void custom_music_loader(std::string name, u64 my_request) {
 
   // Start every layer on the same frame, a little in the future (50 ms), and not before the
   // previous set has faded out.
-  MiniAudioLib::ma_uint64 start = std::max(
-      MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
-          MiniAudioLib::ma_engine_get_sample_rate(&maEngine) / 20,
-      g_custom_music_silent_at);
+  MiniAudioLib::ma_uint64 start =
+      std::max(MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
+                   MiniAudioLib::ma_engine_get_sample_rate(&maEngine) / 20,
+               g_custom_music_silent_at);
+  const int v0 = custom_music_clamp_variant(set->def, g_custom_music_variant.load());
+  set->current_variant = v0;
   MiniAudioLib::ma_sound_group_set_volume(&set->group, g_custom_music_volume.load());
   MiniAudioLib::ma_sound_group_start(&set->group);
-  for (auto& layer : set->layers) {
-    MiniAudioLib::ma_sound_set_looping(&layer->sound, MA_TRUE);
-    MiniAudioLib::ma_sound_set_start_time_in_pcm_frames(&layer->sound, start);
-    MiniAudioLib::ma_sound_set_fade_in_milliseconds(&layer->sound, 0.0f, 1.0f,
-                                                    (MiniAudioLib::ma_uint64)set->fade_ms);
-    MiniAudioLib::ma_sound_start(&layer->sound);
+  for (size_t i = 0; i < set->layers.size(); i++) {
+    auto& s = set->layers[i]->sound;
+    MiniAudioLib::ma_sound_set_looping(&s, MA_TRUE);
+    MiniAudioLib::ma_sound_set_start_time_in_pcm_frames(&s, start);
+    MiniAudioLib::ma_sound_set_fade_in_milliseconds(&s, 0.0f, set->def.variants[v0][i],
+                                                    (MiniAudioLib::ma_uint64)kCustomMusicFadeMs);
+    MiniAudioLib::ma_sound_start(&s);
   }
-  lg::info("custom music: playing '{}'", name);
+  lg::info("custom music: playing '{}' ({} layers, variant {})", name, set->layers.size(), v0);
   g_custom_music_active = std::move(set);
   g_custom_music_loaders--;
 }
 
+// Crossfade every layer to its gain in the requested variant. No seek, no restart.
+static void custom_music_apply_variant(CustomMusicSet& set, int variant) {
+  const int v = custom_music_clamp_variant(set.def, variant);
+  if (v != variant && !set.warned_variant) {
+    set.warned_variant = true;
+    lg::warn("custom music '{}': variant {} does not exist in the set file, using 0", set.name,
+             variant);
+  }
+  if (v == set.current_variant) {
+    return;
+  }
+  lg::info("custom music '{}': variant {} -> {}", set.name, set.current_variant, v);
+  for (size_t i = 0; i < set.layers.size(); i++) {
+    MiniAudioLib::ma_sound_set_fade_in_milliseconds(
+        &set.layers[i]->sound, -1.0f, set.def.variants[v][i],
+        (MiniAudioLib::ma_uint64)set.def.variant_fade_ms);
+  }
+  set.current_variant = v;
+}
+
+// Re-align layers that drifted from layer 0. Only for fully decoded layers.
+static void custom_music_sync_layers(CustomMusicSet& set,
+                                     std::chrono::steady_clock::time_point now) {
+  if (set.def.stream || set.paused || set.layers.size() < 2 ||
+      now - set.last_sync_check < std::chrono::milliseconds(250)) {
+    return;
+  }
+  set.last_sync_check = now;
+  auto& ref_sound = set.layers[0]->sound;
+  MiniAudioLib::ma_uint64 ref = 0, ref_after = 0, len = 0;
+  MiniAudioLib::ma_sound_get_length_in_pcm_frames(&ref_sound, &len);
+  MiniAudioLib::ma_sound_get_cursor_in_pcm_frames(&ref_sound, &ref);
+  std::vector<MiniAudioLib::ma_uint64> cursors(set.layers.size(), 0);
+  for (size_t i = 1; i < set.layers.size(); i++) {
+    MiniAudioLib::ma_sound_get_cursor_in_pcm_frames(&set.layers[i]->sound, &cursors[i]);
+  }
+  MiniAudioLib::ma_sound_get_cursor_in_pcm_frames(&ref_sound, &ref_after);
+  if (ref_after != ref) {
+    return;  // the mixer ran between the reads, try again next time
+  }
+  for (size_t i = 1; i < set.layers.size(); i++) {
+    long long diff = (long long)cursors[i] - (long long)ref;
+    if (len > 0) {
+      if (diff > (long long)len / 2) {
+        diff -= (long long)len;
+      } else if (diff < -(long long)len / 2) {
+        diff += (long long)len;
+      }
+    }
+    if (std::llabs(diff) > 64) {
+      lg::warn("custom music '{}': layer '{}' drifted {} frames, re-aligning", set.name,
+               set.layers[i]->id, diff);
+      MiniAudioLib::ma_sound_seek_to_pcm_frame(&set.layers[i]->sound, ref);
+    }
+  }
+}
+
 u32 play_custom_music(u32 file_name) {
   std::string name = goal_string(file_name);
+  if (name.find('+') != std::string::npos) {
+    lg::error("custom music: '+' is reserved for layer files, refusing '{}'", name);
+    return offset_of_s7();
+  }
   std::lock_guard<std::mutex> lock(g_custom_music_mutex);
   if (name == g_custom_music_failed_name) {
     return offset_of_s7();  // already failed once, the player waits for the symbol to change
@@ -387,7 +554,7 @@ u32 stop_custom_music() {
 
 // Called once per frame from GOAL. volume_bits is a float (0-100) passed as raw bits.
 u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
-  (void)variant;  // used from phase 2
+  g_custom_music_variant = (int)variant;
   const float vol = float_from_bits(volume_bits) / 100.0f;
   g_custom_music_volume = vol;
   const bool now_paused = paused != 0;
@@ -408,7 +575,10 @@ u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
       }
     };
     if (g_custom_music_active) {
-      apply(*g_custom_music_active);
+      auto& set = *g_custom_music_active;
+      apply(set);
+      custom_music_apply_variant(set, (int)variant);
+      custom_music_sync_layers(set, now);
     }
     for (auto& dying : g_custom_music_dying) {
       apply(*dying);

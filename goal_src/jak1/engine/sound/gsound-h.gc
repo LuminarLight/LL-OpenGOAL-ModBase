@@ -128,7 +128,9 @@
   (lavatube-end 46)
   (finalboss-middle 47)
   (finalboss-end 48)
-  (default 49))
+  (default 49)
+  (corner 50)
+  )
 
 (defenum sound-mask
   :bitfield #t

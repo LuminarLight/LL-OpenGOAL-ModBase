@@ -34,6 +34,16 @@
         "type": "'music",
         "custom-music": "'lltest-sphere"
       }
+    },
+    {
+      "trans": [-77.27, 600.00, -91.17, 20.0],
+      "bsphere": [-77.27, 600.00, -91.17, 25.0],
+      "lump": {
+        "name": "lltest2-ambient-2",
+        "type": "'music",
+        "custom-music": "'lltest",
+        "flava": ["enum-uint32", "(music-flava corner)"]
+      }
     }
   ],
 

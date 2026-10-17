@@ -394,7 +394,7 @@
                 (when (and (= (-> a1-6 name) v1-13) (-> *level* play?))
                   (set! (-> *setting-control* default music) (-> a1-6 info music-bank))
                   (set! (-> *setting-control* default custom-music) (-> a1-6 info custom-music)))))))
-        (set! (-> *setting-control* default sound-flava) (the-as uint 49))
+        (set! (-> *setting-control* default sound-flava) (the-as uint (music-flava default))) ;; modbase: was (the-as uint 49)
         (set! (-> *setting-control* default sound-flava-priority) 0.0)
         ;; find any ambients, and execute them.
         (when (and *execute-ambients* (not (paused?)))
