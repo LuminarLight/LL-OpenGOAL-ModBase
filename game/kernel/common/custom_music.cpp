@@ -69,9 +69,8 @@ void custom_music_init_engine() {
   }
 }
 
-// One set of time-synced layers plays at a time. GOAL starts and stops sets and pushes the
-// volume, pause state and variant every frame. Loading runs on a separate thread and never
-// calls into GOAL; everything shared is guarded by g_custom_music_mutex.
+// One set of time-synced layers plays at a time. Loading runs on its own thread and never calls
+// into GOAL; shared state is guarded by g_custom_music_mutex.
 struct CustomMusicLayerDef {
   std::string id;
   std::string path;  // relative to the music dir
@@ -108,7 +107,7 @@ static constexpr int kCustomMusicFadeMs = 1000;
 static std::mutex g_custom_music_mutex;
 static std::unique_ptr<CustomMusicSet> g_custom_music_active;
 static std::vector<std::unique_ptr<CustomMusicSet>> g_custom_music_dying;
-static std::atomic<u64> g_custom_music_request{0};  // bumped on every start/stop
+static std::atomic<u64> g_custom_music_request{0};
 static std::atomic<int> g_custom_music_loaders{0};
 static std::atomic<bool> g_custom_music_shutdown{false};
 static std::atomic<float> g_custom_music_volume{1.0f};
@@ -207,7 +206,7 @@ static bool custom_music_load_set_def(const std::string& name, CustomMusicSetDef
     out.variant_fade_ms = j.value("variant_fade_ms", 1500);
     out.stream = j.value("stream", false);
 
-    // nlohmann sorts object keys, so layers are in alphabetical order. Gains are looked up by id.
+    // nlohmann sorts keys, so layers are alphabetical. Gains are looked up by id.
     const auto& layers = j.at("layers");
     for (auto it = layers.begin(); it != layers.end(); ++it) {
       std::string rel = it.value().get<std::string>();
@@ -316,8 +315,7 @@ static void custom_music_loader(std::string name, u64 my_request) {
     return;
   }
 
-  // Start every layer on the same frame, a little in the future (50 ms), and not before the
-  // previous set has faded out.
+  // Same start frame for every layer: 50 ms ahead, and after the previous set has faded out.
   MiniAudioLib::ma_uint64 start =
       std::max(MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
                    MiniAudioLib::ma_engine_get_sample_rate(&maEngine) / 20,
