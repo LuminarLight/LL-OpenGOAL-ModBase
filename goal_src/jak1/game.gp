@@ -504,10 +504,6 @@
    "flut_common/flut-part.gc"
    "flut_common/flutflut.gc"
    "flut_common/target-flut.gc"
-
-   ;; TFL note: added
-   "tfl_common/tfl-hint-data.gc"
-   "tfl_common/tfl-hint.gc"
    )
 
 
