@@ -1,7 +1,5 @@
 ;;-*-Lisp-*-
 (in-package goal)
-;; Custom music player, based on the custom music system from The Forgotten Lands mod
-;; (see README for credits).
 (define *custom-music-playing?* #f)
 
 (deftype custom-music-player (process)

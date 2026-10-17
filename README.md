@@ -77,7 +77,7 @@ You can see the music `lltest`, implemented/used in the `lltest2` level of this 
 
 #### Credits
 
-The first working custom music system was created by Zed, then it was greatly expanded by Hat-Kid, and then further expanded by barg and Zed. What we have in this modbase today is a significantly reworked and improved version of all of those prior implementations - this is the first implementation that supports variants/flava. Please let me know if this is inaccurate and I will adjust this section.
+The first working custom music system was created by Zed, then it was greatly expanded by Hat-Kid. Later, barg and Zed ported it from SFML to miniaudio in the other modbase, and let me use their changes. What we have in this modbase today is a significantly reworked and improved version of all of those prior implementations - this is the first implementation that supports variants/flava. Please let me know if this is inaccurate and I will adjust this section.
 
 ---
 
