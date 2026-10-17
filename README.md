@@ -61,7 +61,8 @@ Events can be set by a music ambient with a `flava` lump:
 
 ```jsonc
 "flava": ["enum-uint32", "(music-flava corner)"],
-"priority": ["float", 20.0]  // optional, default is 10.0. The highest priority wins; in case of a tie, the one evaluated last wins
+// Priority is optional, default is 10.0. The highest wins; in case of a tie, the one evaluated last wins
+"priority": ["float", 20.0]
 ```
 
 Or in the code with `(set-setting! 'sound-flava #f [priority] (music-flava corner))`.
