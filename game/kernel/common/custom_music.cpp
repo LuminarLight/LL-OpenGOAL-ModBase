@@ -79,6 +79,7 @@ struct CustomMusicLayerDef {
 struct CustomMusicSetDef {
   int variant_fade_ms = 1500;
   bool stream = false;
+  float volume_tweak = 1.0f;
   std::vector<CustomMusicLayerDef> layers;
   std::vector<std::vector<float>> variants;  // variants[v][i] = gain of layers[i] in variant v
 };
@@ -205,6 +206,11 @@ static bool custom_music_load_set_def(const std::string& name, CustomMusicSetDef
     auto j = parse_commented_json(file_util::read_text_file(set_file), set_file.string());
     out.variant_fade_ms = j.value("variant_fade_ms", 1500);
     out.stream = j.value("stream", false);
+    out.volume_tweak = j.value("volume_tweak", 1.0f);
+    if (out.volume_tweak < 0.0f) {
+      lg::error("custom music '{}': volume_tweak can't be negative", name);
+      return false;
+    }
 
     // nlohmann sorts keys, so layers are alphabetical. Gains are looked up by id.
     const auto& layers = j.at("layers");
@@ -322,7 +328,8 @@ static void custom_music_loader(std::string name, u64 my_request) {
                g_custom_music_silent_at);
   const int v0 = custom_music_clamp_variant(set->def, g_custom_music_variant.load());
   set->current_variant = v0;
-  MiniAudioLib::ma_sound_group_set_volume(&set->group, g_custom_music_volume.load());
+  MiniAudioLib::ma_sound_group_set_volume(&set->group,
+                                          g_custom_music_volume.load() * set->def.volume_tweak);
   MiniAudioLib::ma_sound_group_start(&set->group);
   for (size_t i = 0; i < set->layers.size(); i++) {
     auto& s = set->layers[i]->sound;
@@ -432,7 +439,7 @@ u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
   {
     std::lock_guard<std::mutex> lock(g_custom_music_mutex);
     auto apply = [&](CustomMusicSet& set) {
-      MiniAudioLib::ma_sound_group_set_volume(&set.group, vol);
+      MiniAudioLib::ma_sound_group_set_volume(&set.group, vol * set.def.volume_tweak);
       if (set.paused != now_paused) {
         if (now_paused) {
           MiniAudioLib::ma_sound_group_stop(&set.group);

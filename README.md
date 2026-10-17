@@ -31,8 +31,9 @@ You can optionally configure your custom music to support variants (flava). To d
 
 ```jsonc
 {
-  "variant_fade_ms": 1500, // how long a variant change takes
-  "stream": false,         // true = stream the files instead of loading them into memory
+  "variant_fade_ms": 1500, // how long a variant change takes, in ms (default 1500)
+  "stream": false,         // true = stream the files instead of loading them into memory (default false)
+  "volume_tweak": 1.0,     // multiplies the volume of the whole set (default 1.0), like TWEAKVAL.MUS does for base game music
   "layers": { "base": "coolmusic.flac", "drums": "coolmusic+drums.flac" },
   // the variant number is the index; variant 0 plays for every event that isn't mapped
   "variants": [

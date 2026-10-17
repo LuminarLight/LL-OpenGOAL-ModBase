@@ -1,10 +1,19 @@
 {
   "variant_fade_ms": 1500,
   "stream": false,
-  "layers": { "base": "lltest.flac", "beats": "lltest+beats.flac" },
-  // variant number = index, 0 is the default
+  "volume_tweak": 1.0,
+  "layers": {
+    "base": "lltest.flac",
+    "beats": "lltest+beats.flac"
+  },
   "variants": [
-    { "base": 1.0, "beats": 0.0 },  // 0 default
-    { "base": 1.0, "beats": 1.0 }   // 1 corner
+    {
+      "base": 1.0,
+      "beats": 0.0
+    },
+    {
+      "base": 1.0,
+      "beats": 1.0
+    }
   ]
 }
