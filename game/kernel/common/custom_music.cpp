@@ -234,7 +234,12 @@ static bool custom_music_load_set_def(const std::string& name, CustomMusicSetDef
       }
       std::vector<float> gains;
       for (const auto& layer : out.layers) {
-        gains.push_back(v.value(layer.id, 0.0f));
+        float gain = v.value(layer.id, 0.0f);
+        if (gain < 0.0f) {
+          lg::error("custom music '{}': gain of layer '{}' can't be negative", name, layer.id);
+          return false;
+        }
+        gains.push_back(gain);
       }
       out.variants.push_back(std::move(gains));
     }
