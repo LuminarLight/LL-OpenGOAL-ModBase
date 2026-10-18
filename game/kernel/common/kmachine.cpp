@@ -1218,8 +1218,6 @@ void init_common_pc_port_functions(
   make_func_symbol_func("pc-mkdir-file-path", (void*)pc_mkdir_filepath);
 
   // custom music
-  make_func_symbol_func("play-custom-music", (void*)play_custom_music);
-  make_func_symbol_func("stop-custom-music", (void*)stop_custom_music);
   make_func_symbol_func("custom-music-update", (void*)custom_music_update);
 
   // discord rich presence

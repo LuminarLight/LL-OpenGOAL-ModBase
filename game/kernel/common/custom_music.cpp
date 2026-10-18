@@ -42,7 +42,6 @@ namespace MiniAudioLib {
 }  // namespace MiniAudioLib
 
 #include "common/log/log.h"
-#include "common/symbols.h"
 #include "common/util/FileUtil.h"
 #include "common/util/json_util.h"
 #include "common/util/string_util.h"
@@ -50,7 +49,6 @@ namespace MiniAudioLib {
 
 #include "game/kernel/common/Ptr.h"
 #include "game/kernel/common/kernel_types.h"
-#include "game/kernel/jak1/kscheme.h"
 #include "game/runtime.h"
 
 static MiniAudioLib::ma_engine maEngine;
@@ -113,7 +111,7 @@ static std::atomic<int> g_custom_music_loaders{0};
 static std::atomic<bool> g_custom_music_shutdown{false};
 static std::atomic<float> g_custom_music_volume{1.0f};
 static std::atomic<int> g_custom_music_variant{0};
-static std::string g_custom_music_failed_name;
+static std::string g_custom_music_wanted;
 // engine time (pcm frames) when the last retired set is silent. A new set starts after it,
 // so different music never crossfades.
 static MiniAudioLib::ma_uint64 g_custom_music_silent_at = 0;
@@ -131,15 +129,6 @@ static float float_from_bits(u32 bits) {
   float f;
   memcpy(&f, &bits, 4);
   return f;
-}
-
-static u32 goal_bool(bool b) {
-  return b ? offset_of_s7() + jak1_symbols::FIX_SYM_TRUE : offset_of_s7();
-}
-
-static void set_custom_music_playing_flag(bool playing) {
-  static auto sym = jak1::intern_from_c("*custom-music-playing?*");
-  sym->value = goal_bool(playing);
 }
 
 static void custom_music_free_set(CustomMusicSet& set) {
@@ -314,9 +303,6 @@ static void custom_music_loader(std::string name, u64 my_request) {
   const bool stale = g_custom_music_request.load() != my_request || g_custom_music_shutdown.load();
   if (!ok || stale) {
     custom_music_free_set(*set);
-    if (!ok && !stale) {
-      g_custom_music_failed_name = name;
-    }
     g_custom_music_loaders--;
     return;
   }
@@ -399,43 +385,46 @@ static void custom_music_sync_layers(CustomMusicSet& set,
   }
 }
 
-u32 play_custom_music(u32 file_name) {
-  if (!g_ma_engine_inited) {
-    return offset_of_s7();
-  }
-  std::string name = goal_string(file_name);
+static void play_custom_music(const std::string& name) {
   if (name.find('+') != std::string::npos) {
     lg::error("custom music: '+' is reserved for layer files, refusing '{}'", name);
-    return offset_of_s7();
+    return;
   }
   std::lock_guard<std::mutex> lock(g_custom_music_mutex);
-  if (name == g_custom_music_failed_name) {
-    return offset_of_s7();  // already failed once, the player waits for the symbol to change
-  }
-  g_custom_music_failed_name.clear();
   custom_music_retire_active_locked();
   u64 my_request = ++g_custom_music_request;
   g_custom_music_loaders++;
-  set_custom_music_playing_flag(true);
   std::thread(custom_music_loader, name, my_request).detach();
-  return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
 }
 
-u32 stop_custom_music() {
+static void stop_custom_music() {
   std::lock_guard<std::mutex> lock(g_custom_music_mutex);
   g_custom_music_request++;  // cancels a load that is still running
   custom_music_retire_active_locked();
-  return offset_of_s7() + jak1_symbols::FIX_SYM_TRUE;
 }
 
-// Called once per frame from GOAL. volume_bits is a float (0-100) passed as raw bits.
-u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
+// Called once per frame from GOAL. name is a string, or #f for no music.
+// volume_bits is a float (0-100) passed as raw bits.
+void custom_music_update(u32 name, u32 volume_bits, u32 paused, u32 variant) {
+  if (!g_ma_engine_inited) {
+    return;
+  }
+  // only starts or stops on a change, so a set that failed to load isn't retried every frame
+  std::string wanted = name == offset_of_s7() ? "" : goal_string(name);
+  if (wanted != g_custom_music_wanted) {
+    g_custom_music_wanted = wanted;
+    if (wanted.empty()) {
+      stop_custom_music();
+    } else {
+      play_custom_music(wanted);
+    }
+  }
+
   g_custom_music_variant = (int)variant;
   const float vol = float_from_bits(volume_bits) / 100.0f;
   g_custom_music_volume = vol;
   const bool now_paused = paused != 0;
   const auto now = std::chrono::steady_clock::now();
-  bool playing;
   {
     std::lock_guard<std::mutex> lock(g_custom_music_mutex);
     auto apply = [&](CustomMusicSet& set) {
@@ -466,10 +455,7 @@ u32 custom_music_update(u32 volume_bits, u32 paused, u32 variant) {
         ++it;
       }
     }
-    playing = g_custom_music_active != nullptr || g_custom_music_loaders.load() > 0;
   }
-  set_custom_music_playing_flag(playing);
-  return goal_bool(playing);
 }
 
 void custom_music_shutdown() {

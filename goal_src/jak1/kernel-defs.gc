@@ -573,9 +573,7 @@
 (define-extern pc-discord-rpc-set (function int none))
 
 ;; custom music
-(define-extern play-custom-music (function string symbol))
-(define-extern stop-custom-music (function symbol))
-(define-extern custom-music-update (function float int int symbol))
+(define-extern custom-music-update (function object float int int none))
 
 (define-extern pc-filepath-exists? (function string symbol))
 

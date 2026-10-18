@@ -1976,16 +1976,12 @@
 
 (goal-src "engine/common-obs/generic-obs.gc" "pc-anim-util" "assert")
 
-;; custom music
-(goal-src "pc/ll-modbase/custom-music-player.gc" "level")
-
 (goal-src-sequence
  ;; prefix
  "engine/"
 
  :deps
-  ;; custom music player dep
- ("$OUT/obj/generic-obs.o" "$OUT/obj/custom-music-player.o")
+ ("$OUT/obj/generic-obs.o")
  "target/target-util.gc"
  "target/target-part.gc"
  "target/collide-reaction-target.gc"

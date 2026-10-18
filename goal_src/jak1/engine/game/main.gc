@@ -367,8 +367,6 @@
     (blerc-init)
     ;; collide dma
     (suspend)
-    ;; custom music
-    (process-spawn custom-music-player)
     (while *run*
       ;; start immediately after all process updates finish.
       (profiler-instant-event "display-loop-top")
@@ -408,9 +406,11 @@
             (countdown (s4-2 (-> (scratchpad-object terrain-context) work ambient ambient-list num-items))
               (execute-ambient (-> (scratchpad-object terrain-context) work ambient ambient-list items s4-2) s5-1)))))
       ;; custom music. Like base music, it keeps playing in the debug menu
-      (custom-music-update (-> *setting-control* current music-volume)
-                           (if (and (paused?) (!= *master-mode* 'menu)) 1 0)
-                           *custom-music-variant*)
+      (let ((custom-music (-> *setting-control* default custom-music)))
+        (custom-music-update (if (and custom-music (!= custom-music 0)) (symbol->string custom-music) #f)
+                             (-> *setting-control* current music-volume)
+                             (if (and (paused?) (!= *master-mode* 'menu)) 1 0)
+                             *custom-music-variant*))
       (add-ee-profile-frame 'draw :r #x40 :b #x40) ;; actor update
       ;; do math, before drawing
       (with-profiler "math-engine"
