@@ -205,7 +205,9 @@ static bool custom_music_load_set_def(const std::string& name, CustomMusicSetDef
     const auto& layers = j.at("layers");
     for (auto it = layers.begin(); it != layers.end(); ++it) {
       std::string rel = it.value().get<std::string>();
-      if (fs::path(rel).is_absolute() || rel.find("..") != std::string::npos) {
+      const fs::path rel_path(rel);
+      if (rel_path.is_absolute() ||
+          std::find(rel_path.begin(), rel_path.end(), fs::path("..")) != rel_path.end()) {
         lg::error("custom music '{}': layer path '{}' must be relative and without ..", name, rel);
         return false;
       }
