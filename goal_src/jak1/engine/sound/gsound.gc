@@ -613,7 +613,7 @@
   :allow-misaligned)
 
 (deftype flava-table (basic)
-  ((row   flava-table-row 64 :inline) ;; modbase: was 20. flava-table-add does not check this
+  ((row   flava-table-row 32 :inline) ;; modbase: was 20. flava-table-add does not check this
    (count int32)))
 
 ;; make a new flava table with nothing defined
