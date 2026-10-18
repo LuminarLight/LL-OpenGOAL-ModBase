@@ -54,19 +54,6 @@ namespace MiniAudioLib {
 static MiniAudioLib::ma_engine maEngine;
 static bool g_ma_engine_inited = false;
 
-void custom_music_init_engine() {
-#ifdef _WIN32  // only do this on windows, because it only works on windows.
-  if (g_ma_engine_inited) {
-    MiniAudioLib::ma_engine_uninit(&maEngine);
-    g_ma_engine_inited = false;
-  }
-#endif
-  g_ma_engine_inited = MiniAudioLib::ma_engine_init(NULL, &maEngine) == MiniAudioLib::MA_SUCCESS;
-  if (!g_ma_engine_inited) {
-    lg::error("custom music: audio engine failed to start, custom music is disabled");
-  }
-}
-
 // One set of time-synced layers plays at a time. Loading runs on its own thread and never calls
 // into GOAL; shared state is guarded by g_custom_music_mutex.
 struct CustomMusicLayerDef {
@@ -480,5 +467,22 @@ void custom_music_shutdown() {
   }
   for (int i = 0; i < 200 && g_custom_music_loaders.load() > 0; i++) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+}
+
+void custom_music_init_engine() {
+  if (g_ma_engine_inited) {
+    // free the sets first, they point at the old engine
+    custom_music_shutdown();
+    g_custom_music_request++;
+    g_custom_music_shutdown = false;
+    g_custom_music_wanted.clear();
+    g_custom_music_silent_at = 0;
+    MiniAudioLib::ma_engine_uninit(&maEngine);
+    g_ma_engine_inited = false;
+  }
+  g_ma_engine_inited = MiniAudioLib::ma_engine_init(NULL, &maEngine) == MiniAudioLib::MA_SUCCESS;
+  if (!g_ma_engine_inited) {
+    lg::error("custom music: audio engine failed to start, custom music is disabled");
   }
 }
