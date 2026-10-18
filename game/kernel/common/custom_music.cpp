@@ -342,7 +342,7 @@ static void custom_music_apply_variant(CustomMusicSet& set, int variant) {
 static void custom_music_sync_layers(CustomMusicSet& set,
                                      std::chrono::steady_clock::time_point now) {
   if (set.def.stream || set.paused || set.layers.size() < 2 ||
-      now - set.last_sync_check < std::chrono::milliseconds(250)) {
+      now - set.last_sync_check < std::chrono::milliseconds(1000)) {
     return;
   }
   set.last_sync_check = now;
@@ -358,6 +358,8 @@ static void custom_music_sync_layers(CustomMusicSet& set,
   if (ref_after != ref) {
     return;  // the mixer ran between the reads, try again next time
   }
+  const long long tolerance =
+      MiniAudioLib::ma_engine_get_device(&maEngine)->playback.internalPeriodSizeInFrames + 64;
   for (size_t i = 1; i < set.layers.size(); i++) {
     long long diff = (long long)cursors[i] - (long long)ref;
     if (len > 0) {
@@ -367,7 +369,7 @@ static void custom_music_sync_layers(CustomMusicSet& set,
         diff += (long long)len;
       }
     }
-    if (std::llabs(diff) > 64) {
+    if (std::llabs(diff) > tolerance) {
       lg::warn("custom music '{}': layer '{}' drifted {} frames, re-aligning", set.name,
                set.layers[i]->id, diff);
       MiniAudioLib::ma_sound_seek_to_pcm_frame(&set.layers[i]->sound, ref);
