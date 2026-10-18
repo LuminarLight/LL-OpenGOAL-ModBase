@@ -686,5 +686,4 @@
 
 (flava-table-add credits (default 2))
 
-;; custom music: name = custom-music symbol, number = variant index in its .musicset.jsonc
 (flava-table-add lltest (corner 1))
