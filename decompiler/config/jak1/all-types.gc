@@ -16672,21 +16672,21 @@
 
 (deftype flava-table-row (structure)
   ((music symbol     :offset-assert 0)
-   (flava uint8   50 :offset-assert 4)
+   (flava uint8   256 :offset-assert 4) ;; modbase: was 50
    )
   :allow-misaligned
   :method-count-assert 9
-  :size-assert         #x36
-  :flag-assert         #x900000036
+  :size-assert         #x104
+  :flag-assert         #x900000104
   )
 
 (deftype flava-table (basic)
-  ((row   flava-table-row 20 :inline :offset-assert 4)
-   (count int32      :offset-assert 1284)
+  ((row   flava-table-row 32 :inline :offset-assert 4) ;; modbase: was 20
+   (count int32      :offset-assert 8708)
    )
   :method-count-assert 9
-  :size-assert         #x508
-  :flag-assert         #x900000508
+  :size-assert         #x2208
+  :flag-assert         #x900002208
   )
 
 ;; - Functions
