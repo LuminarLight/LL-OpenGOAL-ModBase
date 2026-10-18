@@ -11,12 +11,13 @@
 
   "base_id": 40000,
 
-  "art_groups": ["plat-ag", "water-anim-training-ag", "water-anim-sunken-dark-eco-ag", "driller-lurker-ag", "mother-spider-ag", "baby-spider-ag", "spider-egg-ag", "babak-ag", "quicksandlurker-ag", "hopper-ag", "lurkerpuppy-ag", "citb-bunny-ag"],
+  "art_groups": ["racer-ag", "plat-ag", "water-anim-training-ag", "water-anim-sunken-dark-eco-ag", "driller-lurker-ag", "mother-spider-ag", "baby-spider-ag", "spider-egg-ag", "babak-ag", "quicksandlurker-ag", "hopper-ag", "lurkerpuppy-ag", "citb-bunny-ag"],
 
   "custom_models": [],
 
   "textures": [
-    ["village1-vis-alpha"]
+    ["village1-vis-alpha"],
+    ["zoomerhud"]
   ],
 
   "tex_remap": "village1",
@@ -293,6 +294,17 @@
         "spring-height": ["meters", 400.0],
         "vis-dist": ["meters", 200.0],
         "alt-vector": ["vector4m", [-80.11, 600.0, 80.0, 0.003]] // last one needs to be multiplied by 4096 - for how many seconds should this be "forced"
+      }
+    },
+
+    {
+      "trans": [0.0, 557.1, 295.7],
+      "etype": "racer",
+      "game_task": 0,
+      "quat" : [0, 0, 0, 1],
+      "bsphere": [0.0, 557.1, 295.7, 10],
+      "lump": {
+        "name": "lltest2-racer-1"
       }
     },
 
