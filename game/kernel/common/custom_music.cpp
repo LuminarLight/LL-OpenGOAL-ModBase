@@ -54,11 +54,9 @@ namespace MiniAudioLib {
 static MiniAudioLib::ma_engine maEngine;
 static bool g_ma_engine_inited = false;
 
-// One set of time-synced layers plays at a time. Loading runs on its own thread and never calls
-// into GOAL; shared state is guarded by g_custom_music_mutex.
 struct CustomMusicLayerDef {
   std::string id;
-  std::string path;  // relative to the music dir
+  std::string path;
 };
 
 struct CustomMusicSetDef {
@@ -131,7 +129,6 @@ static void custom_music_free_set(CustomMusicSet& set) {
   }
 }
 
-// Caller holds g_custom_music_mutex.
 static void custom_music_retire_active_locked() {
   if (!g_custom_music_active) {
     return;
@@ -147,7 +144,6 @@ static void custom_music_retire_active_locked() {
   g_custom_music_dying.push_back(std::move(g_custom_music_active));
 }
 
-// Only audio extensions, so other files with the same stem never match.
 static fs::path custom_music_find_legacy_file(const std::string& name) {
   static const char* kExts[] = {".flac", ".mp3", ".wav", ".ogg"};
   std::error_code ec;
@@ -403,7 +399,6 @@ void custom_music_update(u32 name, u32 volume_bits, u32 paused, u32 variant) {
   if (!g_ma_engine_inited) {
     return;
   }
-  // only starts or stops on a change, so a set that failed to load isn't retried every frame
   std::string wanted = name == offset_of_s7() ? "" : goal_string(name);
   if (wanted != g_custom_music_wanted) {
     g_custom_music_wanted = wanted;
@@ -472,7 +467,6 @@ void custom_music_shutdown() {
 
 void custom_music_init_engine() {
   if (g_ma_engine_inited) {
-    // free the sets first, they point at the old engine
     custom_music_shutdown();
     g_custom_music_request++;
     g_custom_music_shutdown = false;

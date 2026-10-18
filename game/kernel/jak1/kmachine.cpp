@@ -383,7 +383,7 @@ int InitMachine() {
 int ShutdownMachine() {
   StopIOP();
   CloseListener();
-  custom_music_shutdown();  // before the audio engine goes away
+  custom_music_shutdown();
   ShutdownSound();
   ShutdownGoalProto();
 
