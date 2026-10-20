@@ -184,7 +184,7 @@ static bool custom_music_load_set_def(const std::string& name, CustomMusicSetDef
       return false;
     }
 
-    // nlohmann sorts keys, so layers are alphabetical. Gains are looked up by id.
+    // nlohmann sorts keys alphabetically
     const auto& layers = j.at("layers");
     for (auto it = layers.begin(); it != layers.end(); ++it) {
       std::string rel = it.value().get<std::string>();
@@ -297,7 +297,6 @@ static void custom_music_loader(std::string name, u64 my_request) {
     return;
   }
 
-  // Same start frame for every layer: 50 ms ahead, and after the previous set has faded out.
   MiniAudioLib::ma_uint64 start =
       std::max(MiniAudioLib::ma_engine_get_time_in_pcm_frames(&maEngine) +
                    MiniAudioLib::ma_engine_get_sample_rate(&maEngine) / 20,
