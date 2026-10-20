@@ -405,7 +405,7 @@
                   (collect-ambients (-> v1-32 bsp) s5-1 0 (-> (scratchpad-object terrain-context) work ambient ambient-list)))))
             (countdown (s4-2 (-> (scratchpad-object terrain-context) work ambient ambient-list num-items))
               (execute-ambient (-> (scratchpad-object terrain-context) work ambient ambient-list items s4-2) s5-1)))))
-      ;; custom music. Like base music, it keeps playing in the debug menu
+      ;; custom music
       (let ((custom-music (-> *setting-control* default custom-music)))
         (custom-music-update (if (and custom-music (!= custom-music 0)) (symbol->string custom-music) #f)
                              (-> *setting-control* current music-volume)

@@ -608,12 +608,12 @@
 
 (deftype flava-table-row (structure)
   ((music symbol)
-   (flava uint8 256) ;; index is some flava event, value is music variation. modbase: was 50, covers every uint8 event
+   (flava uint8 256) ;; index is some flava event, value is music variation. modbase: was 50
    )
   :allow-misaligned)
 
 (deftype flava-table (basic)
-  ((row   flava-table-row 32 :inline) ;; modbase: was 20. flava-table-add does not check this
+  ((row   flava-table-row 32 :inline) ;; modbase: was 20
    (count int32)))
 
 ;; make a new flava table with nothing defined
