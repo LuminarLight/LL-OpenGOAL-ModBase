@@ -20,7 +20,7 @@ This change is currently only implemented for TPL. It wouldn't make too much sen
 
 You can play music files of flac, mp3, wav, or ogg format. Put the files in `custom_assets/jak1/custom_sound/music/`. After that, there are two main ways to play your custom music:
 - Set the `custom-music` property in your level's `level-load-info` to your music's name (symbol).
-- Place a music ambient (sphere) in your level, and set its `custom-music` lump to your music's name (symbol). In this case you don't want to set the `music` lump at all - custom music is not supposed to be used together with base game music.
+- Place a music ambient (sphere) in your level, and set its `custom-music` lump to your music's name (symbol). In this case you don't want to set the `music` lump at all - custom music shouldn't be combined with base game music.
 
 When a music change is triggered, the old one fades out, and after that the new one fades in (each takes 1 second) - this is similar to how base game music fades in/out.
 I have also expanded the 3D debug text of music ambients, now it shows the following additional properties: `music`, `custom-music`, `flava`.
@@ -49,7 +49,7 @@ You can optionally configure your custom music to support variants (flava). To d
 - A layer missing from a variant is silent (it gets a default gain of 0.0). This makes configuration easier if you have a lot of layers.
 - Without a `musicset` file, the music plays as a single file, whose name (without extension) must match the music name (for example `coolmusic.flac` for `coolmusic`).
 - Setting `stream` to false loads all layers into memory, instead of streaming them from the storage. This can use a lot of memory, but avoids storage latency. If layers drift apart, they are re-aligned automatically, but only when not streamed.
-- If you are trying to trigger a variant ID that doesn't exist in the music set, it will fall back to 0 and print a warning.
+- If you trigger a variant ID that doesn't exist in the music set, it will fall back to 0 and print a warning (only once per music set).
 
 The `variants` are made to work with the base game's flava system. A flava is an event that is active while Jak is somewhere, or doing something - it can be set by music ambients (literally spheres you place in levels), or set directly in code. Each music track has its own interpretation for events, in its own row in `goal_src/jak1/engine/sound/gsound.gc`, at the same place where it is done for base game music:
 
@@ -79,7 +79,7 @@ You can see the music `lltest`, implemented/used in the `lltest2` level of this 
 
 #### Credits
 
-The first working custom music system was created by Zed, then it was greatly expanded by Hat-Kid. Later, barg and Zed ported it from SFML to miniaudio in the other modbase, and let me use their changes. What we have in this modbase today is a significantly reworked and improved version of all of those prior implementations - this is the first implementation that supports variants/flava. Please let me know if this is inaccurate and I will adjust this section.
+The first working custom music system was created by Zed, then it was greatly expanded by Hat-Kid. Later, barg and Zed ported it from SFML to miniaudio in the other modbase, and let me use their changes. What we have in this modbase today is a significantly reworked and improved version of all of those prior implementations - this is the first implementation that supports variants/flava. The C++ side of this rework was heavily AI-assisted. Please let me know if any of this is inaccurate and I will adjust this section.
 
 ---
 
