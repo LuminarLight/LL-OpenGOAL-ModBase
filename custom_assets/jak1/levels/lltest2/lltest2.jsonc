@@ -11,7 +11,9 @@
 
   "base_id": 40000,
 
-  "art_groups": ["racer-ag", "plat-ag", "water-anim-training-ag", "water-anim-sunken-dark-eco-ag", "driller-lurker-ag", "mother-spider-ag", "baby-spider-ag", "spider-egg-ag", "babak-ag", "quicksandlurker-ag", "hopper-ag", "lurkerpuppy-ag", "citb-bunny-ag"],
+  "art_groups": ["babak-ag", "baby-spider-ag", "citb-bunny-ag", "driller-lurker-ag", 
+                "hopper-ag", "lurkerpuppy-ag", "mother-spider-ag", "plat-ag", "quicksandlurker-ag", 
+                "racer-ag", "spider-egg-ag", "water-anim-sunken-dark-eco-ag", "water-anim-training-ag"],
 
   "custom_models": [],
 
