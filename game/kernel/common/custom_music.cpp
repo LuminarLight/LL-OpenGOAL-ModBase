@@ -11,34 +11,11 @@
 #include <thread>
 #include <vector>
 
-// must come before miniaudio: it pulls in the system headers that miniaudio would otherwise
-// include inside namespace MiniAudioLib
 #include "game/kernel/common/kmachine.h"
 
-#define MINIAUDIO_IMPLEMENTATION
-// NOTE - this is needed, because on macOS, there is a file called `MacTypes.h`
-// inside it, it defines something named `Ptr`
-// Our `Ptr` is not namespaced, so there is ambiguity.
-//
-// Second fix is because miniaudio redefines functions in the stdlib based on bad pre-processor
-// assumptions AppleClang apparently does not define POSIX macros, leading to future ambiguity
+// declarations only; the implementation is compiled in miniaudio_impl.cpp
 namespace MiniAudioLib {
-#if defined(__APPLE__)
-#if !defined(_POSIX_C_SOURCE)
-#define _POSIX_C_SOURCE 200809L
 #include "third-party/miniaudio.h"
-#undef _POSIX_C_SOURCE
-#else
-// It should work if it's defined, but for some reason it didn't this is the unlikely branch
-// but lets maintain the original value
-#define NOT_REAL_OLD_POSIX_C_SOURCE _POSIX_C_SOURCE
-#include "third-party/miniaudio.h"
-#define _POSIX_C_SOURCE NOT_REAL_OLD_POSIX_C_SOURCE
-#undef NOT_REAL_OLD_POSIX_C_SOURCE
-#endif
-#else
-#include "third-party/miniaudio.h"
-#endif
 }  // namespace MiniAudioLib
 
 #include "common/log/log.h"

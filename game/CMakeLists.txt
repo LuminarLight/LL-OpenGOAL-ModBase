@@ -110,6 +110,7 @@ set(RUNTIME_SOURCE
         kernel/common/klisten.cpp
         kernel/common/kmachine.cpp
         kernel/common/custom_music.cpp
+        kernel/common/miniaudio_impl.cpp
         kernel/common/kmalloc.cpp
         kernel/common/kmemcard.cpp
         kernel/common/kprint.cpp
