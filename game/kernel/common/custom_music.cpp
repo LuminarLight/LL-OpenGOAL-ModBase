@@ -13,7 +13,7 @@
 
 #include "game/kernel/common/kmachine.h"
 
-// declarations only; the implementation is compiled in miniaudio_impl.cpp
+// declarations only; the implementation is compiled in miniaudio_impl.c
 namespace MiniAudioLib {
 #include "third-party/miniaudio.h"
 }  // namespace MiniAudioLib

@@ -110,7 +110,7 @@ set(RUNTIME_SOURCE
         kernel/common/klisten.cpp
         kernel/common/kmachine.cpp
         kernel/common/custom_music.cpp
-        kernel/common/miniaudio_impl.cpp
+        kernel/common/miniaudio_impl.c
         kernel/common/kmalloc.cpp
         kernel/common/kmemcard.cpp
         kernel/common/kprint.cpp
@@ -385,6 +385,10 @@ set(RUNTIME_SOURCE
         tools/subtitle_editor/subtitle_editor_repl_client.cpp
         tools/subtitle_editor/subtitle_editor.cpp
         )
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set_source_files_properties(kernel/common/miniaudio_impl.c PROPERTIES COMPILE_OPTIONS "-O1")
+endif()
 
 add_subdirectory(sound)
 
