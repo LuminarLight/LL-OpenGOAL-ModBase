@@ -386,6 +386,7 @@ set(RUNTIME_SOURCE
         tools/subtitle_editor/subtitle_editor.cpp
         )
 
+# GCC takes too long to compile miniaudio at -O3, timing out CI
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set_source_files_properties(kernel/common/miniaudio_impl.c PROPERTIES COMPILE_OPTIONS "-O1")
 endif()

@@ -1,4 +1,4 @@
-// stb_vorbis must be declared before miniaudio for .ogg support
+// declaring stb_vorbis before miniaudio enables .ogg support
 #define STB_VORBIS_HEADER_ONLY
 #include "third-party/stb_vorbis.c"
 
@@ -20,7 +20,7 @@
 #endif
 
 #if defined(__APPLE__)
-// stdlib.h was already included above with _POSIX_C_SOURCE set, which hides alloca on macOS
+// _POSIX_C_SOURCE above hid alloca from stdlib.h
 #include <alloca.h>
 #endif
 #undef STB_VORBIS_HEADER_ONLY
