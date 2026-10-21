@@ -19,5 +19,9 @@
 #include "third-party/miniaudio.h"
 #endif
 
+#if defined(__APPLE__)
+// stdlib.h was already included above with _POSIX_C_SOURCE set, which hides alloca on macOS
+#include <alloca.h>
+#endif
 #undef STB_VORBIS_HEADER_ONLY
 #include "third-party/stb_vorbis.c"
