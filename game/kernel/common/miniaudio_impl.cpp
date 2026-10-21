@@ -1,3 +1,7 @@
+// stb_vorbis must be declared before miniaudio for .ogg support
+#define STB_VORBIS_HEADER_ONLY
+#include "third-party/stb_vorbis.c"
+
 #define MINIAUDIO_IMPLEMENTATION
 // AppleClang does not define POSIX macros, which makes miniaudio redefine stdlib functions
 #if defined(__APPLE__)
@@ -14,3 +18,6 @@
 #else
 #include "third-party/miniaudio.h"
 #endif
+
+#undef STB_VORBIS_HEADER_ONLY
+#include "third-party/stb_vorbis.c"

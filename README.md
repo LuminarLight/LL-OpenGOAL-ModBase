@@ -44,6 +44,7 @@ You can optionally configure your custom music to support variants (flava). To d
 ```
 
 - All layers should be exactly the same length. If this is not the case, you will get a warning in the console. MP3 can't guarantee exact lengths, because encoders can add padding, so we recommend using the other formats.
+- Layers don't need to share the same format. For example, one layer can be ogg and another one can be flac.
 - A recommended naming convention for layer files is `name+layer.extension`. The `+` character is reserved for layers, so a music name can't contain it.
 - Layer paths are relative to the music folder. Absolute paths and `..` are not allowed.
 - A layer missing from a variant is silent (it gets a default gain of 0.0). This makes configuration easier if you have a lot of layers.
