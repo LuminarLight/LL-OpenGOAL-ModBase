@@ -6,6 +6,14 @@ As I said, this is my personal mod base. Feel free to use it, but expect limited
 
 The mod base contains a level called `lltest2`. You may find some examples of the mod base's features implemented in it. Please do not change anything about the level, otherwise you will run into merge conflicts. In the future I might add more and more examples into it, to show people what are currently possible.
 
+## Using This Mod Base
+
+You are welcome to use this mod base, or parts of it, for your own mods. But I have a few requests.
+
+Please be respectful regarding crediting the people behind the features/changes. I tried to mention if a change was developed by someone else. If I missed anyone, please let me know and I will try to correct it.
+
+Also, if you manage to find a way to improve one of the modbase's features, please let me know. It would be nice to add such improvements to this modbase.
+
 ## Mod Base's Custom Changes
 
 ### Load All SBKs
@@ -201,8 +209,6 @@ git merge vanilla/master --allow-unrelated-histories --no-commit
 ## Final Words
 
 As I said, this is my personal mod base. Support is limited/nonexistent. Still, I imagine there may be people who will find it useful. I am happy if that happens. And you can still reach out to me if you want, but I won't be able to help with basic stuff.
-
-I tried to mention if a change was developed by someone else. If I missed anyone, please let me know and I will correct it. On the other hand, if you use this mod base or parts of it, please be respectful regarding crediting the people behind the features/changes.
 
 *~~Luminar Light*
 
