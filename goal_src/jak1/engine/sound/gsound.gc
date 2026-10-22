@@ -608,12 +608,12 @@
 
 (deftype flava-table-row (structure)
   ((music symbol)
-   (flava uint8 50) ;; index is some flava event, value is music variation
+   (flava uint8 256) ;; index is some flava event, value is music variation. modbase: was 50
    )
   :allow-misaligned)
 
 (deftype flava-table (basic)
-  ((row   flava-table-row 20 :inline)
+  ((row   flava-table-row 32 :inline) ;; modbase: was 20
    (count int32)))
 
 ;; make a new flava table with nothing defined
@@ -633,7 +633,7 @@
     ;; append a new music to the flava table
     (set! (-> *flava-table* row (-> *flava-table* count) music) (quote ,name))
     ;; reset this music's flavas
-    (dotimes (n 50)
+    (dotimes (n 256) ;; modbase: was 50, must match the flava array size in flava-table-row
       (set! (-> *flava-table* row (-> *flava-table* count) flava n) 0))
     ;; increase the music count
     ;; (this should probably be done after...)
@@ -685,3 +685,5 @@
 (flava-table-add finalboss (finalboss-middle 1) (finalboss-end 2))
 
 (flava-table-add credits (default 2))
+
+(flava-table-add lltest (corner 1))

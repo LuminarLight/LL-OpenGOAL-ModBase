@@ -19,6 +19,7 @@
 #include "game/graphics/display.h"
 #include "game/graphics/gfx.h"
 #include "game/graphics/sceGraphicsInterface.h"
+#include "game/kernel/common/custom_music.h"
 #include "game/kernel/common/fileio.h"
 #include "game/kernel/common/kboot.h"
 #include "game/kernel/common/kdgo.h"
@@ -382,6 +383,7 @@ int InitMachine() {
 int ShutdownMachine() {
   StopIOP();
   CloseListener();
+  custom_music_shutdown();
   ShutdownSound();
   ShutdownGoalProto();
 

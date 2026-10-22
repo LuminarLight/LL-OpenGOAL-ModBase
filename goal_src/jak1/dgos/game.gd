@@ -246,8 +246,6 @@
   "target-util.o"
   "target-part.o"
   "collide-reaction-target.o"
-  ;; TFL note: added
-  "tfl-music-player.o"
   "logic-target.o"
   "sidekick.o"
   "voicebox.o"

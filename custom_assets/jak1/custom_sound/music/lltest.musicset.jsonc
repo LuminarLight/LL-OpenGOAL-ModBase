@@ -1,0 +1,19 @@
+{
+  "variant_fade_ms": 1500,
+  "stream": false,
+  "volume_tweak": 1.0,
+  "layers": {
+    "base": "lltest.flac",
+    "beats": "lltest+beats.flac"
+  },
+  "variants": [
+    {
+      "base": 1.0,
+      "beats": 0.0
+    },
+    {
+      "base": 1.0,
+      "beats": 1.0
+    }
+  ]
+}
