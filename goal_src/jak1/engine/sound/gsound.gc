@@ -686,4 +686,4 @@
 
 (flava-table-add credits (default 2))
 
-(flava-table-add lltest (corner 1))
+(flava-table-add lltest (corner 1) (racer 2))
